@@ -1,278 +1,49 @@
 ﻿<!DOCTYPE html>
-<html lang="es" x-data="globalApp()">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - DevPhone</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        .login-modal {
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .login-card {
-            transition: transform 0.3s;
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-            .login-card:hover {
-                transform: translateY(-5px);
-            }
-
-        .input-group-text {
-            transition: all 0.3s;
-        }
-
-        .btn-login {
-            background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
-            border: none;
-            transition: all 0.3s;
-        }
-
-            .btn-login:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(0, 242, 254, 0.3);
-            }
-
-        .floating-alert {
-            animation: slideIn 0.5s forwards;
-        }
-
-        @@keyframes slideIn {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="~/DevPhone.styles.css" asp-append-version="true" />
 </head>
-<body class="d-flex flex-column min-vh-100">
-    <!-- Navbar con botón de login -->
-    <header x-data="{ mobileMenuOpen: false }">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container">
-                <a class="navbar-brand fw-bold" href="#">DevPhone</a>
-
-                <!-- Botón de login/registro -->
-                <div class="ms-auto d-flex align-items-center">
-                    <template x-if="!isAuthenticated">
-                        <button @@click="showLoginModal = true"
-                                class="btn btn-outline-light me-2">
-                            <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
-                        </button>
-                    </template>
-
-                    <!-- Menú usuario cuando está autenticado -->
-                    <template x-if="isAuthenticated">
-                        <div class="dropdown">
-                            <button class="btn btn-light dropdown-toggle" type="button"
-                                    id="userDropdown" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle me-1"></i>
-                                <span x-text="userEmail"></span>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Perfil</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Configuración</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <button class="dropdown-item" @@click="logout">
-                                        <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
-                    </template>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">DevPhone</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
-
-    <!-- Contenido principal -->
-    <main class="flex-grow-1">
-        @RenderBody()
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
-        <div class="container text-center">
-            &copy; @DateTime.Now.Year - DevPhone
-        </div>
-    </footer>
-
-    <!-- Modal de Login -->
-    <div x-show="showLoginModal"
-         class="login-modal position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-         style="background-color: rgba(0,0,0,0.5); z-index: 1050;"
-         @@click.away="showLoginModal = false">
-
-        <div class="login-card bg-white p-4" @@click.stop>
-            <div class="text-end">
-                <button @@click="showLoginModal = false" class="btn btn-sm btn-link text-muted">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-
-            <div class="text-center mb-4">
-                <h3 class="fw-bold">Bienvenido a DevPhone</h3>
-                <p class="text-muted">Ingresa tus credenciales</p>
-            </div>
-
-            <!-- Alertas de error -->
-            <div x-show="loginError" class="floating-alert alert alert-danger alert-dismissible fade show">
-                <span x-text="loginError"></span>
-                <button type="button" class="btn-close" @@click="loginError = ''"></button>
-            </div>
-
-            <!-- Formulario de Login -->
-            <form @@submit.prevent="handleLogin">
-                <div class="mb-3">
-                    <label class="form-label">Correo Electrónico</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                        <input type="email" class="form-control"
-                               x-model="loginForm.email"
-                               :class="{ 'is-invalid': loginErrors.email }"
-                               placeholder="tu@email.com">
-                        <div x-show="loginErrors.email" class="invalid-feedback" x-text="loginErrors.email"></div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Contraseña</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                        <input :type="showPassword ? 'text' : 'password'"
-                               class="form-control"
-                               x-model="loginForm.password"
-                               :class="{ 'is-invalid': loginErrors.password }"
-                               placeholder="••••••••">
-                        <button class="btn btn-outline-secondary" type="button"
-                                @@click="showPassword = !showPassword">
-                            <i :class="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
-                        </button>
-                        <div x-show="loginErrors.password" class="invalid-feedback" x-text="loginErrors.password"></div>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-between mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="remember" x-model="loginForm.remember">
-                        <label class="form-check-label" for="remember">Recordarme</label>
-                    </div>
-                    <a href="#" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
-                </div>
-
-                <button type="submit" class="btn btn-login text-white w-100 py-2 mb-3" :disabled="isLoading">
-                    <span x-show="!isLoading">Iniciar Sesión</span>
-                    <span x-show="isLoading" class="spinner-border spinner-border-sm"></span>
-                </button>
-
-                <div class="text-center">
-                    <p class="text-muted">
-                        ¿No tienes cuenta?
-                        <a href="#" class="text-decoration-none fw-bold" @@click.prevent="switchToRegister">Regístrate</a>
-                    </p>
-                </div>
-            </form>
-        </div>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
     </div>
 
-    <!-- Scripts -->
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - DevPhone - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-
-    <script>
-        function globalApp() {
-            return {
-                // Estado de la aplicación
-                isAuthenticated: false,
-                userEmail: '',
-                showLoginModal: false,
-                loginError: '',
-                isLoading: false,
-                showPassword: false,
-
-                // Datos del formulario
-                loginForm: {
-                    email: '',
-                    password: '',
-                    remember: false
-                },
-
-                // Errores de validación
-                loginErrors: {
-                    email: '',
-                    password: ''
-                },
-
-                // Manejar el login
-                handleLogin() {
-                    // Resetear errores
-                    this.loginError = '';
-                    this.loginErrors = { email: '', password: '' };
-
-                    // Validación del cliente
-                    if (!this.loginForm.email) {
-                        this.loginErrors.email = 'Por favor ingresa tu email';
-                        return;
-                    }
-
-                    if (!this.loginForm.password) {
-                        this.loginErrors.password = 'Por favor ingresa tu contraseña';
-                        return;
-                    }
-
-                    // Simular llamada a API
-                    this.isLoading = true;
-
-                    // Esto sería una llamada fetch a tu backend
-                    setTimeout(() => {
-                        this.isLoading = false;
-
-                        // Simular respuesta exitosa (en producción validar con tu backend)
-                        if (this.loginForm.email === 'admin@devphone.com' && this.loginForm.password === '123456') {
-                            this.isAuthenticated = true;
-                            this.userEmail = this.loginForm.email;
-                            this.showLoginModal = false;
-                            this.loginForm = { email: '', password: '', remember: false };
-
-                            // Aquí podrías redirigir o actualizar la UI
-                        } else {
-                            this.loginError = 'Credenciales incorrectas. Por favor intenta nuevamente.';
-                        }
-                    }, 1500);
-                },
-
-                // Cerrar sesión
-                logout() {
-                    this.isAuthenticated = false;
-                    this.userEmail = '';
-                    // Aquí podrías hacer una llamada a tu backend para logout
-                },
-
-                // Cambiar a formulario de registro
-                switchToRegister() {
-                    // Implementar lógica para cambiar a registro
-                    alert('Funcionalidad de registro no implementada en este ejemplo');
-                }
-            }
-        }
-    </script>
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
