@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -18,6 +19,7 @@ namespace DevPhone.Models
         public decimal PrecioUnitario { get; set; }
 
         // Navegación
-        public virtual ICollection<MDetalleRepuesto> DetallesRepuesto { get; set; }
+        [ValidateNever]
+        public virtual ICollection<MDetalleRepuesto> DetallesRepuesto { get; set; } = new List<MDetalleRepuesto>();
     }
 }

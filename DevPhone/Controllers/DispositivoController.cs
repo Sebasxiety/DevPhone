@@ -1,111 +1,72 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DevPhone.Controllers
 {
+    [Authorize]
     public class DispositivoController : Controller
     {
         private readonly IDispositivoService _dispositivoService;
         private readonly IClienteService _clienteService;
 
-        public DispositivoController(
-            IDispositivoService dispositivoService,
-            IClienteService clienteService)
+        public DispositivoController(IDispositivoService ds, IClienteService cs)
         {
-            _dispositivoService = dispositivoService;
-            _clienteService = clienteService;
+            _dispositivoService = ds;
+            _clienteService = cs;
         }
 
-        // GET: Dispositivo
         public async Task<IActionResult> Index()
         {
+            ViewBag.Success = TempData["DispositivoSuccess"];
+            ViewBag.Error = TempData["DispositivoError"];
             var lista = await _dispositivoService.GetAllAsync();
             return View(lista);
         }
 
-        // GET: Dispositivo/Details/5
-        public async Task<IActionResult> Details(int? id)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(MDispositivo disp)
         {
-            if (id == null) return NotFound();
-            var disp = await _dispositivoService.GetByIdAsync(id.Value);
-            if (disp == null) return NotFound();
-            return View(disp);
-        }
+            // omitimos navegación si existe
+            ModelState.Remove(nameof(MDispositivo.Ordenes));
+            ModelState.Remove(nameof(MDispositivo.Cliente));
 
-        // GET: Dispositivo/Create
-        public async Task<IActionResult> Create()
-        {
-            ViewData["IdCliente"] = new SelectList(
-                await _clienteService.GetAllAsync(),
-                "IdCliente", "Nombre");
-            return View();
-        }
-
-        // POST: Dispositivo/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(MDispositivo dispositivo)
-        {
+            disp.FechaIngreso = DateTime.Now;
             if (!ModelState.IsValid)
             {
-                ViewData["IdCliente"] = new SelectList(
-                    await _clienteService.GetAllAsync(),
-                    "IdCliente", "Nombre", dispositivo.IdCliente);
-                return View(dispositivo);
+                TempData["DispositivoError"] = "Revisa los datos.";
+                return RedirectToAction(nameof(Index));
             }
 
-            await _dispositivoService.CreateAsync(dispositivo);
+            await _dispositivoService.CreateAsync(disp);
+            TempData["DispositivoSuccess"] = "Dispositivo agregado.";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Dispositivo/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, MDispositivo disp)
         {
-            if (id == null) return NotFound();
-            var disp = await _dispositivoService.GetByIdAsync(id.Value);
-            if (disp == null) return NotFound();
+            ModelState.Remove(nameof(MDispositivo.Ordenes));
+            ModelState.Remove(nameof(MDispositivo.Cliente));
 
-            ViewData["IdCliente"] = new SelectList(
-                await _clienteService.GetAllAsync(),
-                "IdCliente", "Nombre", disp.IdCliente);
-            return View(disp);
-        }
-
-        // POST: Dispositivo/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, MDispositivo dispositivo)
-        {
-            if (id != dispositivo.IdDispositivo) return NotFound();
-            if (!ModelState.IsValid)
+            if (id != disp.IdDispositivo || !ModelState.IsValid)
             {
-                ViewData["IdCliente"] = new SelectList(
-                    await _clienteService.GetAllAsync(),
-                    "IdCliente", "Nombre", dispositivo.IdCliente);
-                return View(dispositivo);
+                TempData["DispositivoError"] = "No se pudo actualizar.";
+                return RedirectToAction(nameof(Index));
             }
 
-            await _dispositivoService.UpdateAsync(dispositivo);
+            await _dispositivoService.UpdateAsync(disp);
+            TempData["DispositivoSuccess"] = "Dispositivo actualizado.";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Dispositivo/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-            var disp = await _dispositivoService.GetByIdAsync(id.Value);
-            if (disp == null) return NotFound();
-            return View(disp);
-        }
-
-        // POST: Dispositivo/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
         {
             await _dispositivoService.DeleteAsync(id);
+            TempData["DispositivoSuccess"] = "Dispositivo eliminado.";
             return RedirectToAction(nameof(Index));
         }
     }

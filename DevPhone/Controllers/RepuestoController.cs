@@ -1,82 +1,69 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevPhone.Controllers
 {
+    [Authorize]
     public class RepuestoController : Controller
     {
-        private readonly IRepuestoService _repuestoService;
+        private readonly IRepuestoService _svc;
+        public RepuestoController(IRepuestoService svc) => _svc = svc;
 
-        public RepuestoController(IRepuestoService repuestoService)
-        {
-            _repuestoService = repuestoService;
-        }
-
-        // GET: Repuesto
+        // GET: /Repuesto
         public async Task<IActionResult> Index()
         {
-            var lista = await _repuestoService.GetAllAsync();
+            ViewBag.Success = TempData["RepuestoSuccess"];
+            ViewBag.Error = TempData["RepuestoError"];
+            var lista = await _svc.GetAllAsync();
             return View(lista);
         }
 
-        // GET: Repuesto/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null) return NotFound();
-            var repuesto = await _repuestoService.GetByIdAsync(id.Value);
-            if (repuesto == null) return NotFound();
-            return View(repuesto);
-        }
-
-        // GET: Repuesto/Create
-        public IActionResult Create() => View();
-
-        // POST: Repuesto/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        // POST: /Repuesto/Create
+        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MRepuesto repuesto)
         {
-            if (!ModelState.IsValid) return View(repuesto);
-            await _repuestoService.CreateAsync(repuesto);
+            // Ignorar la navegación al bindear
+            ModelState.Remove(nameof(MRepuesto.DetallesRepuesto));
+
+            if (!ModelState.IsValid)
+            {
+                var msgs = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage);
+                TempData["RepuestoError"] = string.Join(" | ", msgs);
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _svc.CreateAsync(repuesto);
+            TempData["RepuestoSuccess"] = "Repuesto creado correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Repuesto/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null) return NotFound();
-            var repuesto = await _repuestoService.GetByIdAsync(id.Value);
-            if (repuesto == null) return NotFound();
-            return View(repuesto);
-        }
-
-        // POST: Repuesto/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        // POST: /Repuesto/Edit
+        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, MRepuesto repuesto)
         {
-            if (id != repuesto.IdRepuesto) return NotFound();
-            if (!ModelState.IsValid) return View(repuesto);
-            await _repuestoService.UpdateAsync(repuesto);
+            ModelState.Remove(nameof(MRepuesto.DetallesRepuesto));
+
+            if (id != repuesto.IdRepuesto || !ModelState.IsValid)
+            {
+                TempData["RepuestoError"] = "Error al actualizar el repuesto.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _svc.UpdateAsync(repuesto);
+            TempData["RepuestoSuccess"] = "Repuesto actualizado correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Repuesto/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: /Repuesto/Delete
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null) return NotFound();
-            var repuesto = await _repuestoService.GetByIdAsync(id.Value);
-            if (repuesto == null) return NotFound();
-            return View(repuesto);
-        }
-
-        // POST: Repuesto/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            await _repuestoService.DeleteAsync(id);
+            await _svc.DeleteAsync(id);
+            TempData["RepuestoSuccess"] = "Repuesto eliminado correctamente.";
             return RedirectToAction(nameof(Index));
         }
     }

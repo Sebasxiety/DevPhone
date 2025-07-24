@@ -1,0 +1,313 @@
+@model IEnumerable<DevPhone.Models.MDispositivo>
+@{
+    ViewData["Title"] = "Gestión de Dispositivos";
+}
+
+<style>
+    [x-cloak] {
+        display: none !important
+    }</style>
+
+<div x-data="deviceManager()" class="container-fluid">
+
+    <!-- Mensajes -->
+    @if (ViewBag.Success != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @ViewBag.Success
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @ViewBag.Error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Título + Botón Nuevo -->
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h2>@ViewData["Title"]</h2>
+        <button class="btn btn-primary" x-on:click="openAdd()">
+            <i class="bi bi-plus-lg"></i> Nuevo Dispositivo
+        </button>
+    </div>
+
+    <!-- Tabla -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Serie</th>
+                <th>Modelo</th>
+                <th>Marca</th>
+                <th>Fecha Ingreso</th>
+                <th>Estado</th>
+                <th>Cliente</th>
+                <th style="width:120px">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model)
+            {
+                <tr>
+                    <td>@d.Serie</td>
+                    <td>@d.Modelo</td>
+                    <td>@d.Marca</td>
+                    <td>@d.FechaIngreso.ToString("g")</td>
+                    <td>@d.EstadoActual</td>
+                    <td>@d.Cliente.Nombre @d.Cliente.Apellido</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1"
+                                x-on:click="openEdit({
+                      id: @d.IdDispositivo,
+                      serie: '@d.Serie',
+                      modelo: '@d.Modelo',
+                      marca: '@d.Marca',
+                      estado: '@d.EstadoActual',
+                      clienteId: @d.IdCliente,
+                      clienteText: '@d.Cliente.Nombre @d.Cliente.Apellido (@d.Cliente.Cedula)'
+                    })">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger"
+                                x-on:click="openDelete({ id: @d.IdDispositivo, serie: '@d.Serie' })">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Modal Agregar -->
+    <template x-if="showAdd">
+        <div x-cloak class="modal-backdrop d-flex align-items-center justify-content-center"
+             style="background:rgba(0,0,0,0.5); z-index:1050;">
+            <div class="card p-4" style="width:420px;">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Nuevo Dispositivo</h5>
+                    <button class="btn-close" x-on:click="closeAdd()"></button>
+                </div>
+                <form x-ref="addForm" x-on:submit.prevent="submitAdd" method="post" asp-action="Create">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-2">
+                        <label class="form-label">Serie</label>
+                        <input name="Serie" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Modelo</label>
+                        <input name="Modelo" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Marca</label>
+                        <input name="Marca" class="form-control" />
+                    </div>
+
+                    <!-- Aquí va el combo de Estados -->
+                    <div class="mb-2">
+                        <label class="form-label">Estado</label>
+                        <select name="EstadoActual" class="form-select" x-model="addSelectedState">
+                            <template x-for="s in deviceStates" :key="s">
+                                <option :value="s" x-text="s"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Búsqueda Cliente -->
+                    <div class="mb-2">
+                        <label class="form-label">Cliente</label>
+                        <input type="text" class="form-control"
+                               placeholder="Buscar cliente..."
+                               x-model="addClientTerm"
+                               x-on:input.debounce="searchClients('add')">
+                        <ul class="list-group position-absolute w-100 zindex-popover"
+                            x-show="addClientResults.length">
+                            <template x-for="c in addClientResults" :key="c.id">
+                                <li class="list-group-item list-group-item-action"
+                                    x-on:click="selectClient('add', c)">
+                                    <span x-text="c.text"></span>
+                                </li>
+                            </template>
+                        </ul>
+                        <input type="hidden" name="IdCliente" x-model="addSelectedClient.id" />
+                        <div class="mt-1 text-success" x-text="addSelectedClient.text"></div>
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <button type="button" class="btn btn-secondary me-2" x-on:click="closeAdd()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modal Editar -->
+    <template x-if="showEdit">
+        <div x-cloak class="modal-backdrop d-flex align-items-center justify-content-center"
+             style="background:rgba(0,0,0,0.5); z-index:1050;">
+            <div class="card p-4" style="width:420px;">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Editar Dispositivo</h5>
+                    <button class="btn-close" x-on:click="closeEdit()"></button>
+                </div>
+                <form x-ref="editForm" :action="`/Dispositivo/Edit/${editData.id}`" x-on:submit.prevent="submitEdit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="IdDispositivo" x-model="editData.id" />
+
+                    <div class="mb-2">
+                        <label class="form-label">Serie</label>
+                        <input name="Serie" class="form-control" x-model="editData.serie" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Modelo</label>
+                        <input name="Modelo" class="form-control" x-model="editData.modelo" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Marca</label>
+                        <input name="Marca" class="form-control" x-model="editData.marca" />
+                    </div>
+
+                    <!-- Combo de Estados en Editar -->
+                    <div class="mb-2">
+                        <label class="form-label">Estado</label>
+                        <select name="EstadoActual" class="form-select" x-model="editData.estado">
+                            <template x-for="s in deviceStates" :key="s">
+                                <option :value="s" x-text="s"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Cliente -->
+                    <div class="mb-2">
+                        <label class="form-label">Cliente</label>
+                        <input type="text" class="form-control"
+                               x-model="editClientTerm"
+                               x-on:input.debounce="searchClients('edit')">
+                        <ul class="list-group position-absolute w-100 zindex-popover"
+                            x-show="editClientResults.length">
+                            <template x-for="c in editClientResults" :key="c.id">
+                                <li class="list-group-item list-group-item-action"
+                                    x-on:click="selectClient('edit', c)">
+                                    <span x-text="c.text"></span>
+                                </li>
+                            </template>
+                        </ul>
+                        <input type="hidden" name="IdCliente" x-model="editSelectedClient.id" />
+                        <div class="mt-1 text-success" x-text="editSelectedClient.text"></div>
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <button type="button" class="btn btn-secondary me-2" x-on:click="closeEdit()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modal Eliminar (sin cambios) -->
+    <template x-if="showDelete">
+        <div x-cloak class="modal-backdrop d-flex align-items-center justify-content-center">
+            <div class="card p-4" style="width:320px;">
+                <h5 class="mb-3">Eliminar Dispositivo</h5>
+                <p>¿Eliminar dispositivo <strong x-text="deleteData.serie"></strong>?</p>
+                <form x-on:submit.prevent="submitDelete" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" x-model="deleteData.id" />
+                    <div class="text-end mt-3">
+                        <button type="button" class="btn btn-secondary me-2" x-on:click="closeDelete()">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+</div>
+
+<script>
+    function deviceManager() {
+      return {
+        // flags de modales
+        showAdd:false, showEdit:false, showDelete:false,
+
+        // lista de estados
+        deviceStates: [
+          'Ingresado',
+          'En Progreso',
+          'Reparado',
+          'Entregado',
+          'Pendiente'
+        ],
+
+        // datos Add
+        addClientTerm:'', addClientResults:[], addSelectedClient:{},
+        addSelectedState: 'Ingresado',
+
+        // datos Edit
+        editClientTerm:'', editClientResults:[], editSelectedClient:{},
+        editData:{}, deleteData:{},
+
+        openAdd() {
+          this.addClientTerm=''; this.addClientResults=[]; this.addSelectedClient={};
+          this.addSelectedState = this.deviceStates[0];
+          this.showAdd = true;
+        },
+        closeAdd(){ this.showAdd=false; },
+
+        openEdit(d) {
+          this.editData={ ...d };
+          this.editClientTerm = d.clienteText;
+          this.editSelectedClient = { id:d.clienteId, text:d.clienteText };
+          this.showEdit = true;
+        },
+        closeEdit(){ this.showEdit=false; },
+
+        openDelete(d) {
+          this.deleteData={ id:d.id, serie:d.serie };
+          this.showDelete = true;
+        },
+        closeDelete(){ this.showDelete=false; },
+
+        async searchClients(mode) {
+          const term = mode==='add'? this.addClientTerm : this.editClientTerm;
+          if(term.length<2) {
+            if(mode==='add') this.addClientResults=[]; else this.editClientResults=[];
+            return;
+          }
+          const res = await fetch(`/Cliente/Search?q=${encodeURIComponent(term)}`);
+          const json = await res.json();
+          if(mode==='add') this.addClientResults=json; else this.editClientResults=json;
+        },
+        selectClient(mode,c){
+          if(mode==='add'){
+            this.addSelectedClient=c; this.addClientResults=[]; this.addClientTerm=c.text;
+          } else {
+            this.editSelectedClient=c; this.editClientResults=[]; this.editClientTerm=c.text;
+          }
+        },
+
+        submitAdd(){
+          // antes de enviar, fija estado y cliente
+          const f = this.$refs.addForm;
+          f.querySelector('select[name="EstadoActual"]').value = this.addSelectedState;
+          f.querySelector('input[name="IdCliente"]').value  = this.addSelectedClient.id;
+          f.submit();
+        },
+        submitEdit(){
+          const f = this.$refs.editForm;
+          f.querySelector('select[name="EstadoActual"]').value = this.editData.estado;
+          f.querySelector('input[name="IdCliente"]').value     = this.editSelectedClient.id;
+          f.submit();
+        },
+        submitDelete(){
+          const f = event.target;
+          f.action = `/Dispositivo/Delete/${this.deleteData.id}`;
+          f.submit();
+        }
+      }
+    }
+</script>

@@ -77,5 +77,22 @@ namespace DevPhone.Controllers
             TempData["ClienteSuccess"] = "Cliente eliminado correctamente.";
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Search(string q)
+        {
+            var todos = await _svc.GetAllAsync();
+            var filtrados = todos
+                .Where(c =>
+                    (!string.IsNullOrEmpty(c.Nombre) && c.Nombre.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(c.Apellido) && c.Apellido.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(c.Cedula) && c.Cedula.Contains(q, StringComparison.OrdinalIgnoreCase)))
+                .Select(c => new {
+                    id = c.IdCliente,
+                    text = $"{c.Nombre} {c.Apellido} ({c.Cedula})"
+                });
+            return Json(filtrados);
+        }
+
     }
 }
