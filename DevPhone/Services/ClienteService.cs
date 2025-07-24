@@ -12,17 +12,13 @@ namespace DevPhone.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<MCliente>> GetAllAsync()
-        {
-            return await _context.Clientes.AsNoTracking().ToListAsync();
-        }
+        public Task<List<MCliente>> GetAllAsync() =>
+            _context.Clientes.ToListAsync();
 
-        public async Task<MCliente?> GetByIdAsync(int id)
-        {
-            return await _context.Clientes.FindAsync(id);
-        }
+        public Task<MCliente> GetByIdAsync(int id) =>
+            _context.Clientes.FirstOrDefaultAsync(c => c.IdCliente == id);
 
-        public async Task AddAsync(MCliente cliente)
+        public async Task CreateAsync(MCliente cliente)
         {
             _context.Clientes.Add(cliente);
             await _context.SaveChangesAsync();
@@ -36,10 +32,10 @@ namespace DevPhone.Services
 
         public async Task DeleteAsync(int id)
         {
-            var cliente = await _context.Clientes.FindAsync(id);
-            if (cliente != null)
+            var entidad = await _context.Clientes.FindAsync(id);
+            if (entidad != null)
             {
-                _context.Clientes.Remove(cliente);
+                _context.Clientes.Remove(entidad);
                 await _context.SaveChangesAsync();
             }
         }

@@ -6,14 +6,13 @@ namespace DevPhone.Models
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
-        {
-        }
+        { }
 
-        public DbSet<MCliente> Clientes => Set<MCliente>();
-        public DbSet<MUsuario> Usuarios => Set<MUsuario>();
-        public DbSet<MDispositivo> Dispositivos => Set<MDispositivo>();
-        public DbSet<MOrdenServicio> OrdenesServicio => Set<MOrdenServicio>();
-        public DbSet<MRepuesto> Repuestos => Set<MRepuesto>();
-        public DbSet<MDetalleRepuesto> DetalleRepuestos => Set<MDetalleRepuesto>();
+        public DbSet<MCliente> Clientes { get; set; }
+        public DbSet<MUsuario> Usuarios { get; set; }
+        public DbSet<MDispositivo> Dispositivos { get; set; }
+        public DbSet<MOrdenServicio> OrdenesServicio { get; set; }
+        public DbSet<MRepuesto> Repuestos { get; set; }
+        public DbSet<MDetalleRepuesto> DetallesRepuesto { get; set; }
     }
 }

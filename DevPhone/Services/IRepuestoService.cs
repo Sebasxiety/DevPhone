@@ -4,7 +4,10 @@ namespace DevPhone.Services
 {
     public interface IRepuestoService
     {
-        Task<IEnumerable<MRepuesto>> GetAllAsync();
-        Task AddAsync(MRepuesto repuesto);
+        Task<List<MRepuesto>> GetAllAsync();
+        Task<MRepuesto> GetByIdAsync(int id);
+        Task CreateAsync(MRepuesto repuesto);
+        Task UpdateAsync(MRepuesto repuesto);
+        Task DeleteAsync(int id);
     }
 }

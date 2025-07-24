@@ -1,15 +1,23 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DevPhone.Models
 {
     public class MRepuesto
     {
-        public int Id { get; set; }
+        [Key]
+        public int IdRepuesto { get; set; }
 
-        [Required]
-        public string Nombre { get; set; } = string.Empty;
+        [Required, StringLength(100)]
+        public string Nombre { get; set; }
 
-        [DataType(DataType.Currency)]
-        public decimal Precio { get; set; }
+        [StringLength(500)]
+        public string Descripcion { get; set; }
+
+        [Required, Column(TypeName = "decimal(18,2)")]
+        public decimal PrecioUnitario { get; set; }
+
+        // Navegación
+        public virtual ICollection<MDetalleRepuesto> DetallesRepuesto { get; set; }
     }
 }

@@ -4,14 +4,22 @@ namespace DevPhone.Models
 {
     public class MUsuario
     {
-        public int Id { get; set; }
+        [Key]
+        public int IdUsuario { get; set; }
+
+        [Required, StringLength(50)]
+        public string NombreUsuario { get; set; }
+
+        [Required, StringLength(255)]
+        public string Contrasena { get; set; }
+
+        [Required, StringLength(50)]
+        public string Rol { get; set; }
 
         [Required]
-        [MaxLength(100)]
-        public string UserName { get; set; } = string.Empty;
+        public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
+        // Navegación
+        public virtual ICollection<MOrdenServicio> Ordenes { get; set; }
     }
 }

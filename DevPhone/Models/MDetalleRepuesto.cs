@@ -1,21 +1,24 @@
+using Azure.Core;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DevPhone.Models
 {
     public class MDetalleRepuesto
     {
-        public int Id { get; set; }
+        [Key]
+        public int IdDetalle { get; set; }
 
-        [ForeignKey(nameof(OrdenServicio))]
-        public int OrdenServicioId { get; set; }
+        [Required]
+        public int Cantidad { get; set; }
 
-        public MOrdenServicio? OrdenServicio { get; set; }
+        // FKs
+        [ForeignKey(nameof(OrdenService))]
+        public int IdOrden { get; set; }
+        public virtual MOrdenServicio OrdenService { get; set; }
 
         [ForeignKey(nameof(Repuesto))]
-        public int RepuestoId { get; set; }
-
-        public MRepuesto? Repuesto { get; set; }
-
-        public int Cantidad { get; set; }
+        public int IdRepuesto { get; set; }
+        public virtual MRepuesto Repuesto { get; set; }
     }
 }

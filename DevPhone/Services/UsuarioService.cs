@@ -12,10 +12,32 @@ namespace DevPhone.Services
             _context = context;
         }
 
-        public async Task<MUsuario?> LoginAsync(string username, string password)
+        public Task<List<MUsuario>> GetAllAsync() =>
+            _context.Usuarios.ToListAsync();
+
+        public Task<MUsuario> GetByIdAsync(int id) =>
+            _context.Usuarios.FirstOrDefaultAsync(u => u.IdUsuario == id);
+
+        public async Task CreateAsync(MUsuario usuario)
         {
-            return await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.UserName == username && u.Password == password);
+            _context.Usuarios.Add(usuario);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(MUsuario usuario)
+        {
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var entidad = await _context.Usuarios.FindAsync(id);
+            if (entidad != null)
+            {
+                _context.Usuarios.Remove(entidad);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

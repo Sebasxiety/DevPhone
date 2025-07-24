@@ -12,15 +12,32 @@ namespace DevPhone.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<MRepuesto>> GetAllAsync()
-        {
-            return await _context.Repuestos.AsNoTracking().ToListAsync();
-        }
+        public Task<List<MRepuesto>> GetAllAsync() =>
+            _context.Repuestos.ToListAsync();
 
-        public async Task AddAsync(MRepuesto repuesto)
+        public Task<MRepuesto> GetByIdAsync(int id) =>
+            _context.Repuestos.FirstOrDefaultAsync(r => r.IdRepuesto == id);
+
+        public async Task CreateAsync(MRepuesto repuesto)
         {
             _context.Repuestos.Add(repuesto);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(MRepuesto repuesto)
+        {
+            _context.Repuestos.Update(repuesto);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var entidad = await _context.Repuestos.FindAsync(id);
+            if (entidad != null)
+            {
+                _context.Repuestos.Remove(entidad);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

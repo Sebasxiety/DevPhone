@@ -4,6 +4,10 @@ namespace DevPhone.Services
 {
     public interface IDispositivoService
     {
-        Task<IEnumerable<MDispositivo>> GetByClienteAsync(int clienteId);
+        Task<List<MDispositivo>> GetAllAsync();
+        Task<MDispositivo> GetByIdAsync(int id);
+        Task CreateAsync(MDispositivo dispositivo);
+        Task UpdateAsync(MDispositivo dispositivo);
+        Task DeleteAsync(int id);
     }
 }
