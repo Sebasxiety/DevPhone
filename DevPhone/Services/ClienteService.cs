@@ -5,38 +5,34 @@ namespace DevPhone.Services
 {
     public class ClienteService : IClienteService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _ctx;
+        public ClienteService(ApplicationDbContext ctx) => _ctx = ctx;
 
-        public ClienteService(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
-        public Task<List<MCliente>> GetAllAsync() =>
-            _context.Clientes.ToListAsync();
+        public Task<IEnumerable<MCliente>> GetAllAsync() =>
+            _ctx.Clientes.ToListAsync().ContinueWith(t => (IEnumerable<MCliente>)t.Result);
 
         public Task<MCliente> GetByIdAsync(int id) =>
-            _context.Clientes.FirstOrDefaultAsync(c => c.IdCliente == id);
+            _ctx.Clientes.FirstOrDefaultAsync(c => c.IdCliente == id);
 
         public async Task CreateAsync(MCliente cliente)
         {
-            _context.Clientes.Add(cliente);
-            await _context.SaveChangesAsync();
+            _ctx.Clientes.Add(cliente);
+            await _ctx.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(MCliente cliente)
         {
-            _context.Clientes.Update(cliente);
-            await _context.SaveChangesAsync();
+            _ctx.Clientes.Update(cliente);
+            await _ctx.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var entidad = await _context.Clientes.FindAsync(id);
-            if (entidad != null)
+            var e = await _ctx.Clientes.FindAsync(id);
+            if (e != null)
             {
-                _context.Clientes.Remove(entidad);
-                await _context.SaveChangesAsync();
+                _ctx.Clientes.Remove(e);
+                await _ctx.SaveChangesAsync();
             }
         }
     }

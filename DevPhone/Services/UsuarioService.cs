@@ -6,17 +6,19 @@ namespace DevPhone.Services
     public class UsuarioService : IUsuarioService
     {
         private readonly ApplicationDbContext _context;
-
-        public UsuarioService(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        public UsuarioService(ApplicationDbContext context) => _context = context;
 
         public Task<List<MUsuario>> GetAllAsync() =>
             _context.Usuarios.ToListAsync();
 
         public Task<MUsuario> GetByIdAsync(int id) =>
             _context.Usuarios.FirstOrDefaultAsync(u => u.IdUsuario == id);
+
+        public Task<MUsuario> ValidateUserAsync(string username, string password) =>
+            _context.Usuarios
+                    .FirstOrDefaultAsync(u =>
+                        u.NombreUsuario == username &&
+                        u.Contrasena == password);
 
         public async Task CreateAsync(MUsuario usuario)
         {

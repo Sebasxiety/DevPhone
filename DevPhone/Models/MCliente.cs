@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace DevPhone.Models
 {
     public class MCliente
@@ -29,7 +30,9 @@ namespace DevPhone.Models
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
         // Navegación
-        public virtual ICollection<MDispositivo> Dispositivos { get; set; }
-        public virtual ICollection<MOrdenServicio> Ordenes { get; set; }
+        [ValidateNever]
+        public virtual ICollection<MDispositivo> Dispositivos { get; set; } = new List<MDispositivo>();
+        [ValidateNever]
+        public virtual ICollection<MOrdenServicio> Ordenes { get; set; } = new List<MOrdenServicio>();
     }
 }

@@ -1,26 +1,53 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
-builder.Services.AddDbContext<DevPhone.Models.ApplicationDbContext>(options =>
+// 1) EF Core y ApplicationDbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<DevPhone.Services.IClienteService, DevPhone.Services.ClienteService>();
-builder.Services.AddScoped<DevPhone.Services.IUsuarioService, DevPhone.Services.UsuarioService>();
-builder.Services.AddScoped<DevPhone.Services.IDispositivoService, DevPhone.Services.DispositivoService>();
-builder.Services.AddScoped<DevPhone.Services.IOrdenServicioService, DevPhone.Services.OrdenServicioService>();
-builder.Services.AddScoped<DevPhone.Services.IRepuestoService, DevPhone.Services.RepuestoService>();
+
+// 2) Servicios de dominio
+builder.Services.AddScoped<IClienteService, ClienteService>();
+builder.Services.AddScoped<IDispositivoService, DispositivoService>();
+builder.Services.AddScoped<IOrdenServicioService, OrdenServicioService>();
+builder.Services.AddScoped<IRepuestoService, RepuestoService>();
+builder.Services.AddScoped<IDetalleRepuestoService, DetalleRepuestoService>();
+
+// 3) Servicio de usuarios contra tu tabla Usuarios
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+
+// 4) Autenticación por cookies
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.Cookie.Name = "DevPhoneAuth";
+    });
+
+// 5) MVC con filtro global que exige usuario autenticado
+builder.Services.AddControllersWithViews(options =>
+{
+    var policy = new AuthorizationPolicyBuilder()
+                     .RequireAuthenticatedUser()
+                     .Build();
+    options.Filters.Add(new AuthorizeFilter(policy));
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 6) Seed inicial de usuario Admin en la tabla Usuarios
+await SeedAdminUser(app);
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -29,10 +56,34 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// 7) Habilitar autenticación y autorización
+app.UseAuthentication();
 app.UseAuthorization();
 
+// 8) Ruta por defecto al login
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();
+
+static async Task SeedAdminUser(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    // Si la tabla Usuarios está vacía, creamos el Admin
+    if (!await context.Usuarios.AnyAsync())
+    {
+        var admin = new MUsuario
+        {
+            Nombres = "Administrador",
+            NombreUsuario = "admin",
+            Contrasena = "Admin123!",  // ajusta contraseña
+            Rol = "Admin",
+            FechaCreacion = DateTime.Now
+        };
+        context.Usuarios.Add(admin);
+        await context.SaveChangesAsync();
+    }
+}

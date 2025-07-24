@@ -1,82 +1,80 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevPhone.Controllers
 {
+    [Authorize]
     public class ClienteController : Controller
     {
-        private readonly IClienteService _clienteService;
+        private readonly IClienteService _svc;
+        public ClienteController(IClienteService svc) => _svc = svc;
 
-        public ClienteController(IClienteService clienteService)
-        {
-            _clienteService = clienteService;
-        }
-
-        // GET: Cliente
+        // GET: /Cliente
         public async Task<IActionResult> Index()
         {
-            var lista = await _clienteService.GetAllAsync();
+            ViewBag.Success = TempData["ClienteSuccess"];
+            ViewBag.Error = TempData["ClienteError"];
+            var lista = await _svc.GetAllAsync();
             return View(lista);
         }
 
-        // GET: Cliente/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // POST: /Cliente/Create
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            [Bind("Nombre,Apellido,Cedula,Telefono,Correo,Direccion")] MCliente cliente)
         {
-            if (id == null) return NotFound();
-            var cliente = await _clienteService.GetByIdAsync(id.Value);
-            if (cliente == null) return NotFound();
-            return View(cliente);
-        }
+            // Seteamos la fecha aquí
+            cliente.FechaCreacion = DateTime.Now;
 
-        // GET: Cliente/Create
-        public IActionResult Create() => View();
+            if (!ModelState.IsValid)
+            {
+                var mensajes = ModelState.Values
+                                    .SelectMany(v => v.Errors)
+                                    .Select(e => e.ErrorMessage);
+                TempData["ClienteError"] = string.Join(" | ", mensajes);
+                return RedirectToAction(nameof(Index));
+            }
 
-        // POST: Cliente/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(MCliente cliente)
-        {
-            if (!ModelState.IsValid) return View(cliente);
-            await _clienteService.CreateAsync(cliente);
+            await _svc.CreateAsync(cliente);
+            TempData["ClienteSuccess"] = "Cliente creado correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Cliente/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        // POST: /Cliente/Edit
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(
+            int id,
+            [Bind("IdCliente,Nombre,Apellido,Cedula,Telefono,Correo,Direccion")] MCliente cliente)
         {
-            if (id == null) return NotFound();
-            var cliente = await _clienteService.GetByIdAsync(id.Value);
-            if (cliente == null) return NotFound();
-            return View(cliente);
-        }
+            if (id != cliente.IdCliente)
+            {
+                TempData["ClienteError"] = "Identificador inválido.";
+                return RedirectToAction(nameof(Index));
+            }
 
-        // POST: Cliente/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, MCliente cliente)
-        {
-            if (id != cliente.IdCliente) return NotFound();
-            if (!ModelState.IsValid) return View(cliente);
-            await _clienteService.UpdateAsync(cliente);
+            if (!ModelState.IsValid)
+            {
+                var mensajes = ModelState.Values
+                                    .SelectMany(v => v.Errors)
+                                    .Select(e => e.ErrorMessage);
+                TempData["ClienteError"] = string.Join(" | ", mensajes);
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Opcional: conservar fecha creación original si la trajeras
+            await _svc.UpdateAsync(cliente);
+            TempData["ClienteSuccess"] = "Cliente actualizado correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Cliente/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: /Cliente/Delete
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null) return NotFound();
-            var cliente = await _clienteService.GetByIdAsync(id.Value);
-            if (cliente == null) return NotFound();
-            return View(cliente);
-        }
-
-        // POST: Cliente/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            await _clienteService.DeleteAsync(id);
+            await _svc.DeleteAsync(id);
+            TempData["ClienteSuccess"] = "Cliente eliminado correctamente.";
             return RedirectToAction(nameof(Index));
         }
     }

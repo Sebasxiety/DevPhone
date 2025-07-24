@@ -7,6 +7,9 @@ namespace DevPhone.Models
         [Key]
         public int IdUsuario { get; set; }
 
+        [Required, StringLength(100)]
+        public string Nombres { get; set; }
+
         [Required, StringLength(50)]
         public string NombreUsuario { get; set; }
 
