@@ -3,6 +3,7 @@
     ViewData["Title"] = "Gestión de Órdenes de Servicio";
 }
 
+<!-- Oculta todo lo marcado con x-cloak hasta que Alpine arranque -->
 <style>
     [x-cloak] {
         display: none !important;
@@ -12,31 +13,22 @@
         background: rgba(0,0,0,0.5);
         z-index: 1050;
     }
-
-    .list-group {
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    .cursor-pointer {
-        cursor: pointer;
-    }
 </style>
 
 <div x-data="orderManager()" x-init="init()" class="container-fluid">
 
-    <!-- Alertas -->
-    @if (ViewBag.Success != null)
+    <!-- Alertas de creación/errores -->
+    @if (TempData["OrdenSuccess"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show">
-            @ViewBag.Success
+            @TempData["OrdenSuccess"]
             <button class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
-    @if (ViewBag.Error != null)
+    @if (TempData["OrdenError"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show">
-            @ViewBag.Error
+            @TempData["OrdenError"]
             <button class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
@@ -77,18 +69,18 @@
                     <td>
                         <button class="btn btn-sm btn-warning me-1"
                                 x-on:click="openEdit({
-                                    id: @o.IdOrden,
-                                    descripcion: '@Html.Raw(o.DescripcionFalla.Replace("'","\\'"))',
-                                    estado: '@o.Estado',
-                                    clienteId: @o.IdCliente,
-                                    clienteText: '@Html.Raw(o.Cliente.Nombre + " " + o.Cliente.Apellido)',
-                                    usuarioId: @o.IdUsuario,
-                                    dispositivoId: @o.IdDispositivo
-                                })">
+                      id: @o.IdOrden,
+                      descripcion: '@o.DescripcionFalla',
+                      estado: '@o.Estado',
+                      clienteId: @o.IdCliente,
+                      clienteText: '@o.Cliente.Nombre @o.Cliente.Apellido',
+                      usuarioId: @o.IdUsuario,
+                      dispositivoId: @o.IdDispositivo
+                    })">
                             <i class="bi bi-pencil"></i>
                         </button>
                         <button class="btn btn-sm btn-danger"
-                                x-on:click="openDelete({ id: @o.IdOrden })">
+                                x-on:click="openDelete({ id:@o.IdOrden })">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>
@@ -99,23 +91,31 @@
 
     <!-- Modal: Crear Orden -->
     <template x-if="showAdd">
-        <div x-cloak class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center modal-backdrop">
+        <div x-cloak
+             class="modal-backdrop position-fixed top-0 start-0 w-100 h-100
+                d-flex align-items-center justify-content-center">
             <div class="card p-4" style="width:500px;">
                 <div class="d-flex justify-content-between mb-3">
                     <h5>Nueva Orden de Servicio</h5>
                     <button class="btn-close" x-on:click="closeAdd()"></button>
                 </div>
-                <form x-ref="addForm" x-on:submit.prevent="submitAdd" method="post" asp-action="Create">
+                <form x-ref="addForm"
+                      x-on:submit.prevent="submitAdd"
+                      method="post"
+                      asp-action="Create">
                     @Html.AntiForgeryToken()
 
                     <div class="mb-2">
                         <label class="form-label">Descripción de la falla</label>
-                        <textarea name="DescripcionFalla" class="form-control" required></textarea>
+                        <textarea name="DescripcionFalla" class="form-control"></textarea>
                     </div>
 
                     <div class="mb-2">
                         <label class="form-label">Estado</label>
-                        <select name="Estado" class="form-select" x-model="addState" required>
+                        <select name="Estado"
+                                class="form-select"
+                                x-model="addState"
+                                required>
                             <option value="" disabled>Seleccione estado</option>
                             <template x-for="s in orderStates" :key="s">
                                 <option :value="s" x-text="s"></option>
@@ -125,25 +125,28 @@
 
                     <div class="mb-2 position-relative">
                         <label class="form-label">Cliente</label>
-                        <input type="text" class="form-control"
+                        <input type="text"
+                               class="form-control"
                                placeholder="Buscar cliente..."
                                x-model="addClientTerm"
-                               x-on:input.debounce.300ms="searchClient('add')"
-                               required>
-                        <ul class="list-group position-absolute w-100 z-3 mt-1"
-                            x-show="addClientResults.length > 0">
+                               x-on:input.debounce="searchClient('add')">
+                        <ul class="list-group position-absolute w-100 z-3"
+                            x-show="addClientResults.length">
                             <template x-for="c in addClientResults" :key="c.id">
-                                <li class="list-group-item list-group-item-action cursor-pointer"
+                                <li class="list-group-item list-group-item-action"
                                     x-on:click="selectClient('add', c)"
                                     x-text="c.text"></li>
                             </template>
                         </ul>
-                        <input type="hidden" name="IdCliente" x-model="addClient.id" required />
+                        <input type="hidden" name="IdCliente" x-model="addClient.id" />
                     </div>
 
                     <div class="mb-2">
                         <label class="form-label">Técnico</label>
-                        <select name="IdUsuario" class="form-select" x-model="addUser.id" required>
+                        <select name="IdUsuario"
+                                class="form-select"
+                                x-model="addUser.id"
+                                required>
                             <option value="" disabled>Seleccione técnico</option>
                             <template x-for="t in technicians" :key="t.id">
                                 <option :value="t.id" x-text="t.text"></option>
@@ -153,28 +156,25 @@
 
                     <div class="mb-2">
                         <label class="form-label">Dispositivo</label>
-                        <select name="IdDispositivo" class="form-select"
-                                x-model="addDispId"
+                        <select name="IdDispositivo"
+                                class="form-select"
+                                x-model="addDisp.id"
                                 :disabled="!addClient.id"
                                 required>
-                            <option value="" disabled selected>Seleccione dispositivo</option>
+                            <option value="" disabled>Seleccione dispositivo</option>
                             <template x-for="d in addClientDevices" :key="d.id">
                                 <option :value="d.id" x-text="d.text"></option>
                             </template>
                         </select>
-                        <input type="hidden" name="IdDispositivo" x-model="addDispId" />
-
-                        <div x-show="addClient.id && addClientDevices.length === 0"
-                             class="text-danger small mt-1">
-                            Este cliente no tiene dispositivos registrados
-                        </div>
                     </div>
 
                     <div class="text-end mt-3">
-                        <button type="button" class="btn btn-secondary me-2" x-on:click="closeAdd()">Cancelar</button>
-                        <button type="submit"
-                                class="btn btn-primary"
-                                :disabled="!isAddFormValid()">
+                        <button type="button"
+                                class="btn btn-secondary me-2"
+                                x-on:click="closeAdd()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
                             Guardar
                         </button>
                     </div>
@@ -185,7 +185,9 @@
 
     <!-- Modal: Editar Orden -->
     <template x-if="showEdit">
-        <div x-cloak class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center modal-backdrop">
+        <div x-cloak
+             class="modal-backdrop position-fixed top-0 start-0 w-100 h-100
+                d-flex align-items-center justify-content-center">
             <div class="card p-4" style="width:500px;">
                 <div class="d-flex justify-content-between mb-3">
                     <h5>Editar Orden</h5>
@@ -202,13 +204,15 @@
                         <label class="form-label">Descripción de la falla</label>
                         <textarea name="DescripcionFalla"
                                   class="form-control"
-                                  x-model="selected.descripcion"
-                                  required></textarea>
+                                  x-model="selected.descripcion"></textarea>
                     </div>
 
                     <div class="mb-2">
                         <label class="form-label">Estado</label>
-                        <select name="Estado" class="form-select" x-model="selected.estado" required>
+                        <select name="Estado"
+                                class="form-select"
+                                x-model="selected.estado"
+                                required>
                             <option value="" disabled>Seleccione estado</option>
                             <template x-for="s in orderStates" :key="s">
                                 <option :value="s" x-text="s"></option>
@@ -218,25 +222,28 @@
 
                     <div class="mb-2 position-relative">
                         <label class="form-label">Cliente</label>
-                        <input type="text" class="form-control"
+                        <input type="text"
+                               class="form-control"
                                placeholder="Buscar cliente..."
                                x-model="editClientTerm"
-                               x-on:input.debounce.300ms="searchClient('edit')"
-                               required>
-                        <ul class="list-group position-absolute w-100 z-3 mt-1"
-                            x-show="editClientResults.length > 0">
+                               x-on:input.debounce="searchClient('edit')">
+                        <ul class="list-group position-absolute w-100 z-3"
+                            x-show="editClientResults.length">
                             <template x-for="c in editClientResults" :key="c.id">
-                                <li class="list-group-item list-group-item-action cursor-pointer"
+                                <li class="list-group-item list-group-item-action"
                                     x-on:click="selectClient('edit', c)"
                                     x-text="c.text"></li>
                             </template>
                         </ul>
-                        <input type="hidden" name="IdCliente" x-model="editClient.id" required />
+                        <input type="hidden" name="IdCliente" x-model="editClient.id" />
                     </div>
 
                     <div class="mb-2">
                         <label class="form-label">Técnico</label>
-                        <select name="IdUsuario" class="form-select" x-model="editUser.id" required>
+                        <select name="IdUsuario"
+                                class="form-select"
+                                x-model="editUser.id"
+                                required>
                             <option value="" disabled>Seleccione técnico</option>
                             <template x-for="t in technicians" :key="t.id">
                                 <option :value="t.id" x-text="t.text"></option>
@@ -246,7 +253,8 @@
 
                     <div class="mb-2">
                         <label class="form-label">Dispositivo</label>
-                        <select name="IdDispositivo" class="form-select"
+                        <select name="IdDispositivo"
+                                class="form-select"
                                 x-model="editDisp.id"
                                 :disabled="!editClient.id"
                                 required>
@@ -258,10 +266,12 @@
                     </div>
 
                     <div class="text-end mt-3">
-                        <button type="button" class="btn btn-secondary me-2" x-on:click="closeEdit()">Cancelar</button>
-                        <button type="submit"
-                                class="btn btn-primary"
-                                :disabled="!isEditFormValid()">
+                        <button type="button"
+                                class="btn btn-secondary me-2"
+                                x-on:click="closeEdit()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
                             Actualizar
                         </button>
                     </div>
@@ -272,7 +282,9 @@
 
     <!-- Modal: Eliminar Orden -->
     <template x-if="showDelete">
-        <div x-cloak class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center modal-backdrop">
+        <div x-cloak
+             class="modal-backdrop position-fixed top-0 start-0 w-100 h-100
+                d-flex align-items-center justify-content-center">
             <div class="card p-4" style="width:320px;">
                 <h5 class="mb-3">Eliminar Orden</h5>
                 <p>¿Eliminar orden <strong>#<span x-text="selected.id"></span></strong>?</p>
@@ -280,8 +292,14 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" x-model="selected.id" />
                     <div class="text-end mt-3">
-                        <button type="button" class="btn btn-secondary me-2" x-on:click="closeDelete()">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                        <button type="button"
+                                class="btn btn-secondary me-2"
+                                x-on:click="closeDelete()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            Eliminar
+                        </button>
                     </div>
                 </form>
             </div>
@@ -293,198 +311,115 @@
 @section Scripts {
     <script>
         function orderManager() {
-            return {
-                // Estados de los modales
-                showAdd: false,
-                showEdit: false,
-                showDelete: false,
+          return {
+            showAdd: false,
+            showEdit: false,
+            showDelete: false,
 
-                // Datos estáticos
-                orderStates: ['Creada', 'En Progreso', 'Finalizada', 'Entregada'],
-                technicians: [],
+            orderStates: ['Creada','En Progreso','Finalizada','Entregada'],
+            technicians: [],
 
-                // Datos para agregar
-                addState: 'Creada',
-                addClientTerm: '',
-                addClientResults: [],
-                addClient: { id: null, text: '' },
-                addClientDevices: [],
-                addUser: { id: null },
-                addDisp: { id: null },
+            // Crear
+            addState: 'Creada',
+            addClientTerm: '',
+            addClientResults: [],
+            addClient: { id:null, text:'' },
+            addClientDevices: [],
+            addUser: { id:null },
+            addDisp: { id:null },
 
-                // Datos para editar
-                selected: { id: null, descripcion: '', estado: '' },
-                editClientTerm: '',
-                editClientResults: [],
-                editClient: { id: null, text: '' },
-                editClientDevices: [],
-                editUser: { id: null },
-                addDispId: null,
+            // Editar
+            selected: { id:null, descripcion:'', estado:'' },
+            editClientTerm: '',
+            editClientResults: [],
+            editClient: { id:null, text:'' },
+            editClientDevices: [],
+            editUser: { id:null },
+            editDisp: { id:null },
 
-                // Método de inicialización
-                init() {
-                    this.resetAll();
-                    this.loadTechnicians();
-                },
+            init() {
+              fetch('/Usuario/Technicians')
+                .then(r => r.json())
+                .then(j => this.technicians = j);
+            },
 
-                // Cargar técnicos
-                loadTechnicians() {
-                    fetch('/Usuario/Technicians')
-                        .then(r => r.json())
-                        .then(j => this.technicians = j)
-                        .catch(e => console.error('Error cargando técnicos:', e));
-                },
+            openAdd() {
+              this.showAdd = true;
+              this.addState = this.orderStates[0];
+              this.addClientTerm = '';
+              this.addClientResults = [];
+              this.addClient = { id:null, text:'' };
+              this.addClientDevices = [];
+              this.addUser = { id:null };
+              this.addDisp = { id:null };
+            },
+            closeAdd() { this.showAdd = false; },
 
-                // Resetear todos los modales
-                resetAll() {
-                    this.showAdd = false;
-                    this.showEdit = false;
-                    this.showDelete = false;
-                },
+            openEdit(o) {
+              this.selected = {
+                id: o.id,
+                descripcion: o.descripcion,
+                estado: this.orderStates.includes(o.estado) ? o.estado : this.orderStates[0]
+              };
+              this.editClient = { id:o.clienteId, text:o.clienteText };
+              this.editUser   = { id:o.usuarioId };
+              this.editDisp   = { id:o.dispositivoId };
+              this.editClientTerm = o.clienteText;
+              fetch(`/Dispositivo/ByClient?clientId=${o.clienteId}`)
+                .then(r => r.json())
+                .then(j => this.editClientDevices = j);
+              this.showEdit = true;
+            },
+            closeEdit() { this.showEdit = false; },
 
-                // Validación de formularios
-                        isAddFormValid() {
-            return this.addClient.id &&
-                   this.addDisp.id &&
-                   this.addUser.id &&
-                   this.addState &&
-                   this.$refs.addForm.querySelector('textarea[name="DescripcionFalla"]').value.trim() !== '';
-        },
+            openDelete(o) {
+              this.selected = { id:o.id };
+              this.showDelete = true;
+            },
+            closeDelete() { this.showDelete = false; },
 
-                isEditFormValid() {
-                    return this.editClient.id &&
-                           this.editDisp.id &&
-                           this.editUser.id &&
-                           this.selected.estado;
-                },
+            searchClient(mode) {
+              const term = this[mode + 'ClientTerm'];
+              if (term.length < 2) {
+                this[mode + 'ClientResults'] = [];
+                return;
+              }
+              fetch(`/Cliente/Search?q=${encodeURIComponent(term)}`)
+                .then(r => r.json())
+                .then(j => this[mode + 'ClientResults'] = j);
+            },
 
-                // Métodos para abrir/cerrar modales
-                openAdd() {
-                    this.resetAll();
-                    this.addState = this.orderStates[0];
-                    this.clearAddForm();
-                    this.showAdd = true;
-                },
+            selectClient(mode, c) {
+              this[mode + 'Client'] = c;
+              this[mode + 'ClientResults'] = [];
+              this[mode + 'ClientTerm'] = c.text;
+              fetch(`/Dispositivo/ByClient?clientId=${c.id}`)
+                .then(r => r.json())
+                .then(j => this[mode + 'ClientDevices'] = j);
+            },
 
-                closeAdd() {
-                    this.showAdd = false;
-                },
-
-                openEdit(order) {
-                    this.resetAll();
-                    this.selected = {
-                        id: order.id,
-                        descripcion: order.descripcion,
-                        estado: this.orderStates.includes(order.estado) ? order.estado : this.orderStates[0]
-                    };
-                    this.editClient = { id: order.clienteId, text: order.clienteText };
-                    this.editUser = { id: order.usuarioId };
-                    this.editDisp = { id: order.dispositivoId };
-                    this.editClientTerm = order.clienteText;
-
-                    this.loadClientDevices('edit', order.clienteId);
-                    this.showEdit = true;
-                },
-
-                closeEdit() {
-                    this.showEdit = false;
-                },
-
-                openDelete(order) {
-                    this.resetAll();
-                    this.selected = { id: order.id };
-                    this.showDelete = true;
-                },
-
-                closeDelete() {
-                    this.showDelete = false;
-                },
-
-                // Limpiar formulario de agregar
-                clearAddForm() {
-                    this.addClientTerm = '';
-                    this.addClientResults = [];
-                    this.addClient = { id: null, text: '' };
-                    this.addClientDevices = [];
-                    this.addUser = { id: null };
-                    this.addDisp = { id: null };
-                },
-
-                // Buscar clientes
-                searchClient(mode) {
-                    const term = this[`${mode}ClientTerm`];
-                    if (term.length < 2) {
-                        this[`${mode}ClientResults`] = [];
-                        return;
-                    }
-
-                    fetch(`/Cliente/Search?q=${encodeURIComponent(term)}`)
-                        .then(r => r.json())
-                        .then(j => this[`${mode}ClientResults`] = j)
-                        .catch(e => console.error('Error buscando clientes:', e));
-                },
-
-                // Seleccionar cliente
-                selectClient(mode, c) {
-                    this[`${mode}Client`] = c;
-                    this[`${mode}ClientResults`] = [];
-                    this[`${mode}ClientTerm`] = c.text;
-                    fetch(`/Dispositivo/ByClient?clientId=${c.id}`)
-                        .then(r => r.json())
-                        .then(j => {
-                            this[`${mode}ClientDevices`] = j;
-                            // Resetear la selección de dispositivo
-                            if (mode === 'add') this.addDispId = null;
-                        });
-                },
-
-                // Cargar dispositivos del cliente
-                loadClientDevices(mode, clientId) {
-                    fetch(`/Dispositivo/ByClient?clientId=${clientId}`)
-                        .then(r => r.json())
-                        .then(j => {
-                            this[`${mode}ClientDevices`] = j;
-                            // Si solo hay un dispositivo, seleccionarlo automáticamente
-                            if (j.length === 1 && mode === 'add') {
-                                this.addDisp = { id: j[0].id };
-                            }
-                        })
-                        .catch(e => console.error('Error cargando dispositivos:', e));
-                },
-
-                // Enviar formularios
-                submitAdd() {
-                    const form = this.$refs.addForm;
-            form.querySelector('select[name="Estado"]').value = this.addState;
-            form.querySelector('input[name="IdCliente"]').value = this.addClient.id;
-            form.querySelector('select[name="IdUsuario"]').value = this.addUser.id;
-                    form.submit();
-                },
-
-                submitEdit() {
-                    const form = this.$refs.editForm;
-                    this.prepareFormData(form, 'edit');
-                    form.submit();
-                },
-
-                submitDelete() {
-                    const form = event.target;
-                    form.action = `/OrdenServicio/Delete/${this.selected.id}`;
-                    form.submit();
-                },
-
-                // Preparar datos del formulario
-                prepareFormData(form, mode) {
-                    form.querySelector('select[name="Estado"]').value =
-                        mode === 'add' ? this.addState : this.selected.estado;
-                    form.querySelector('input[name="IdCliente"]').value =
-                        this[`${mode}Client`].id;
-                    form.querySelector('select[name="IdUsuario"]').value =
-                        this[`${mode}User`].id;
-                    form.querySelector('select[name="IdDispositivo"]').value =
-                        this[`${mode}Disp`].id;
-                }
-            };
+            submitAdd() {
+              const f = this.$refs.addForm;
+              f.querySelector('select[name="Estado"]').value = this.addState;
+              f.querySelector('input[name="IdCliente"]').value = this.addClient.id;
+              f.querySelector('select[name="IdUsuario"]').value = this.addUser.id;
+              f.querySelector('select[name="IdDispositivo"]').value = this.addDisp.id;
+              f.submit();
+            },
+            submitEdit() {
+              const f = this.$refs.editForm;
+              f.querySelector('select[name="Estado"]').value = this.selected.estado;
+              f.querySelector('input[name="IdCliente"]').value = this.editClient.id;
+              f.querySelector('select[name="IdUsuario"]').value = this.editUser.id;
+              f.querySelector('select[name="IdDispositivo"]').value = this.editDisp.id;
+              f.submit();
+            },
+            submitDelete() {
+              const f = event.target;
+              f.action = `/OrdenServicio/Delete/${this.selected.id}`;
+              f.submit();
+            }
+          }
         }
     </script>
 }
