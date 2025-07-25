@@ -3,7 +3,7 @@
     ViewData["Title"] = "Gestión de Órdenes de Servicio";
 }
 
-<!-- Oculta todo lo marcado con x-cloak hasta que Alpine arranque -->
+<!-- Oculta todo marcado con x-cloak hasta que Alpine arranque -->
 <style>
     [x-cloak] {
         display: none !important;
@@ -17,7 +17,7 @@
 
 <div x-data="orderManager()" x-init="init()" class="container-fluid">
 
-    <!-- Alertas de creación/errores -->
+    <!-- Alertas -->
     @if (TempData["OrdenSuccess"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show">
@@ -156,8 +156,9 @@
 
                     <div class="mb-2">
                         <label class="form-label">Dispositivo</label>
-                        <select name="IdDispositivo"
-                                class="form-select"
+                        <!-- Hidden input garantiza que el ID siempre se envíe -->
+                        <input type="hidden" name="IdDispositivo" x-model="addDisp.id" />
+                        <select class="form-select"
                                 x-model="addDisp.id"
                                 :disabled="!addClient.id"
                                 required>
@@ -253,8 +254,8 @@
 
                     <div class="mb-2">
                         <label class="form-label">Dispositivo</label>
-                        <select name="IdDispositivo"
-                                class="form-select"
+                        <input type="hidden" name="IdDispositivo" x-model="editDisp.id" />
+                        <select class="form-select"
                                 x-model="editDisp.id"
                                 :disabled="!editClient.id"
                                 required>
@@ -400,18 +401,13 @@
 
             submitAdd() {
               const f = this.$refs.addForm;
-              f.querySelector('select[name="Estado"]').value = this.addState;
-              f.querySelector('input[name="IdCliente"]').value = this.addClient.id;
-              f.querySelector('select[name="IdUsuario"]').value = this.addUser.id;
-              f.querySelector('select[name="IdDispositivo"]').value = this.addDisp.id;
+              // Asegura que el hidden input tenga el valor
+              f.querySelector('input[name="IdDispositivo"]').value = this.addDisp.id;
               f.submit();
             },
             submitEdit() {
               const f = this.$refs.editForm;
-              f.querySelector('select[name="Estado"]').value = this.selected.estado;
-              f.querySelector('input[name="IdCliente"]').value = this.editClient.id;
-              f.querySelector('select[name="IdUsuario"]').value = this.editUser.id;
-              f.querySelector('select[name="IdDispositivo"]').value = this.editDisp.id;
+              f.querySelector('input[name="IdDispositivo"]').value = this.editDisp.id;
               f.submit();
             },
             submitDelete() {
