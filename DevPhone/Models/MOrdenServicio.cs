@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -20,17 +21,21 @@ namespace DevPhone.Models
         // FKs
         [ForeignKey(nameof(Cliente))]
         public int IdCliente { get; set; }
+        [ValidateNever]
         public virtual MCliente Cliente { get; set; }
 
         [ForeignKey(nameof(Usuario))]
         public int IdUsuario { get; set; }
+        [ValidateNever]
         public virtual MUsuario Usuario { get; set; }
 
         [ForeignKey(nameof(Dispositivo))]
         public int IdDispositivo { get; set; }
+        [ValidateNever]
         public virtual MDispositivo Dispositivo { get; set; }
 
         // Navegación
-        public virtual ICollection<MDetalleRepuesto> DetallesRepuesto { get; set; }
+        [ValidateNever]
+        public virtual ICollection<MDetalleRepuesto> DetallesRepuesto { get; set; } = new List<MDetalleRepuesto>();
     }
 }

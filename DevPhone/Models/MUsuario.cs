@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace DevPhone.Models
@@ -23,6 +24,7 @@ namespace DevPhone.Models
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
         // Navegación
-        public virtual ICollection<MOrdenServicio> Ordenes { get; set; }
+        [ValidateNever]
+        public virtual ICollection<MOrdenServicio> Ordenes { get; set; } = new List<MOrdenServicio>();
     }
 }

@@ -10,7 +10,10 @@ namespace DevPhone.Services
         {
             _context = context;
         }
-
+        public async Task<bool> ExistsAsync(int id)
+        {
+            return await _context.Dispositivos.AnyAsync(d => d.IdDispositivo == id);
+        }
         public Task<List<MDispositivo>> GetAllAsync() =>
             _context.Dispositivos
                     .Include(d => d.Cliente)

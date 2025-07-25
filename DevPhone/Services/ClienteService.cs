@@ -35,5 +35,9 @@ namespace DevPhone.Services
                 await _ctx.SaveChangesAsync();
             }
         }
+        public async Task<bool> ExistsAsync(int id)
+        {
+            return await _ctx.Clientes.AnyAsync(d => d.IdCliente == id);
+        }
     }
 }

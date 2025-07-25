@@ -1,83 +1,88 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevPhone.Controllers
 {
+    [Authorize]
     public class UsuarioController : Controller
     {
-        private readonly IUsuarioService _usuarioService;
-
-        public UsuarioController(IUsuarioService usuarioService)
-        {
-            _usuarioService = usuarioService;
-        }
+        private readonly IUsuarioService _svc;
+        public UsuarioController(IUsuarioService svc) => _svc = svc;
 
         // GET: Usuario
         public async Task<IActionResult> Index()
         {
-            var lista = await _usuarioService.GetAllAsync();
+            ViewBag.Success = TempData["UsuarioSuccess"];
+            ViewBag.Error = TempData["UsuarioError"];
+            var lista = await _svc.GetAllAsync();
             return View(lista);
         }
 
-        // GET: Usuario/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null) return NotFound();
-            var usuario = await _usuarioService.GetByIdAsync(id.Value);
-            if (usuario == null) return NotFound();
-            return View(usuario);
-        }
-
-        // GET: Usuario/Create
-        public IActionResult Create() => View();
-
         // POST: Usuario/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MUsuario usuario)
         {
-            if (!ModelState.IsValid) return View(usuario);
-            await _usuarioService.CreateAsync(usuario);
+            ModelState.Remove(nameof(MUsuario.Ordenes));
+            usuario.FechaCreacion = DateTime.Now;
+
+            if (!ModelState.IsValid)
+            {
+                var msgs = ModelState.Values
+                                .SelectMany(v => v.Errors)
+                                .Select(e => e.ErrorMessage);
+                TempData["UsuarioError"] = string.Join(" | ", msgs);
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _svc.CreateAsync(usuario);
+            TempData["UsuarioSuccess"] = "Usuario creado correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Usuario/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null) return NotFound();
-            var usuario = await _usuarioService.GetByIdAsync(id.Value);
-            if (usuario == null) return NotFound();
-            return View(usuario);
-        }
-
-        // POST: Usuario/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        // POST: Usuario/Edit
+        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, MUsuario usuario)
         {
-            if (id != usuario.IdUsuario) return NotFound();
-            if (!ModelState.IsValid) return View(usuario);
-            await _usuarioService.UpdateAsync(usuario);
+            ModelState.Remove(nameof(MUsuario.Ordenes));
+
+            if (id != usuario.IdUsuario || !ModelState.IsValid)
+            {
+                TempData["UsuarioError"] = "Error al actualizar el usuario.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _svc.UpdateAsync(usuario);
+            TempData["UsuarioSuccess"] = "Usuario actualizado correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Usuario/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: Usuario/Delete
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null) return NotFound();
-            var usuario = await _usuarioService.GetByIdAsync(id.Value);
-            if (usuario == null) return NotFound();
-            return View(usuario);
+            if (id == 1)
+            {
+                TempData["UsuarioError"] = "No se puede eliminar el usuario administrador maestro.";
+                return RedirectToAction(nameof(Index));
+            }
+            await _svc.DeleteAsync(id);
+            TempData["UsuarioSuccess"] = "Usuario eliminado correctamente.";
+            return RedirectToAction(nameof(Index));
         }
 
-        // POST: Usuario/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        [HttpGet]
+        public async Task<IActionResult> Technicians()
         {
-            await _usuarioService.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
+            var all = await _svc.GetAllAsync();
+            var techs = all
+                .Where(u => u.Rol.Equals("Tecnico", StringComparison.OrdinalIgnoreCase))
+                .Select(u => new {
+                    id = u.IdUsuario,
+                    text = u.Nombres
+                });
+            return Json(techs);
         }
     }
 }

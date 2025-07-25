@@ -10,5 +10,6 @@ namespace DevPhone.Services
         Task CreateAsync(MUsuario usuario);
         Task UpdateAsync(MUsuario usuario);
         Task DeleteAsync(int id);
+        Task<bool> ExistsAsync(int id);
     }
 }

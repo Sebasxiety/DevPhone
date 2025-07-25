@@ -41,5 +41,9 @@ namespace DevPhone.Services
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task<bool> ExistsAsync(int id)
+        {
+            return await _context.Usuarios.AnyAsync(d => d.IdUsuario == id);
+        }
     }
 }

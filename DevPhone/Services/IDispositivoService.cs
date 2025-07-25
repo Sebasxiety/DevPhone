@@ -9,5 +9,6 @@ namespace DevPhone.Services
         Task CreateAsync(MDispositivo dispositivo);
         Task UpdateAsync(MDispositivo dispositivo);
         Task DeleteAsync(int id);
+        Task<bool> ExistsAsync(int id);
     }
 }

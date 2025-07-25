@@ -16,7 +16,8 @@
     <!-- Alpine.js -->
     <script defer
             src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
+   
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .sidebar {
             background: #f8f9fa;
@@ -29,6 +30,8 @@
                 transform: translateX(-100%);
             }
     </style>
+
+    @RenderSection("Styles", required: false)
 </head>
 <body class="d-flex flex-column min-vh-100">
 
@@ -117,7 +120,7 @@
     <footer class="bg-light text-center py-3 mt-auto">
         &copy; @DateTime.Now.Year - DevPhone
     </footer>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

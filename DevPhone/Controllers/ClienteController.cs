@@ -63,7 +63,6 @@ namespace DevPhone.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Opcional: conservar fecha creación original si la trajeras
             await _svc.UpdateAsync(cliente);
             TempData["ClienteSuccess"] = "Cliente actualizado correctamente.";
             return RedirectToAction(nameof(Index));

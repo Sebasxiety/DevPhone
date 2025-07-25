@@ -69,5 +69,19 @@ namespace DevPhone.Controllers
             TempData["DispositivoSuccess"] = "Dispositivo eliminado.";
             return RedirectToAction(nameof(Index));
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> ByClient(int clientId)
+        {
+            var all = await _dispositivoService.GetAllAsync();
+            var list = all
+                .Where(d => d.IdCliente == clientId)
+                .Select(d => new {
+                    id = d.IdDispositivo,
+                    text = d.Serie
+                });
+            return Json(list);
+        }
     }
 }
