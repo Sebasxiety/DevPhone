@@ -1,6 +1,6 @@
 @model IEnumerable<DevPhone.Models.MOrdenServicio>
 @{
-    ViewData["Title"] = "Gestión de Órdenes de Servicio";
+    ViewData["Title"] = "GestiÃ³n de Ã“rdenes de Servicio";
 }
 
 <!-- Oculta todo marcado con x-cloak hasta que Alpine arranque -->
@@ -41,7 +41,7 @@
         </button>
     </div>
 
-    <!-- Tabla de Órdenes -->
+    <!-- Tabla de Ã³rdenes -->
     <table class="table table-striped">
         <thead>
             <tr>
@@ -50,7 +50,7 @@
                 <th>Falla</th>
                 <th>Estado</th>
                 <th>Cliente</th>
-                <th>Técnico</th>
+                <th>TÃ©cnico</th>
                 <th>Dispositivo</th>
                 <th style="width:120px">Acciones</th>
             </tr>
@@ -106,7 +106,7 @@
                     @Html.AntiForgeryToken()
 
                     <div class="mb-2">
-                        <label class="form-label">Descripción de la falla</label>
+                        <label class="form-label">DescripciÃ³n de la falla</label>
                         <textarea name="DescripcionFalla" class="form-control"></textarea>
                     </div>
 
@@ -142,12 +142,12 @@
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label">Técnico</label>
+                        <label class="form-label">TÃ©cnico</label>
                         <select name="IdUsuario"
                                 class="form-select"
                                 x-model="addUser.id"
                                 required>
-                            <option value="" disabled>Seleccione técnico</option>
+                            <option value="" disabled>Seleccione tÃ©cnico</option>
                             <template x-for="t in technicians" :key="t.id">
                                 <option :value="t.id" x-text="t.text"></option>
                             </template>
@@ -156,7 +156,7 @@
 
                     <div class="mb-2">
                         <label class="form-label">Dispositivo</label>
-                        <!-- Hidden input garantiza que el ID siempre se envíe -->
+                        <!-- Hidden input garantiza que el ID siempre se envÃ­e -->
                         <input type="hidden" name="IdDispositivo" x-model="addDisp.id" />
                         <select class="form-select"
                                 x-model="addDisp.id"
@@ -202,7 +202,7 @@
                     <input type="hidden" name="IdOrden" x-model="selected.id" />
 
                     <div class="mb-2">
-                        <label class="form-label">Descripción de la falla</label>
+                        <label class="form-label">DescripciÃ³n de la falla</label>
                         <textarea name="DescripcionFalla"
                                   class="form-control"
                                   x-model="selected.descripcion"></textarea>
@@ -240,12 +240,12 @@
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label">Técnico</label>
+                        <label class="form-label">TÃ©cnico</label>
                         <select name="IdUsuario"
                                 class="form-select"
                                 x-model="editUser.id"
                                 required>
-                            <option value="" disabled>Seleccione técnico</option>
+                            <option value="" disabled>Seleccione tÃ©cnico</option>
                             <template x-for="t in technicians" :key="t.id">
                                 <option :value="t.id" x-text="t.text"></option>
                             </template>
@@ -288,7 +288,7 @@
                 d-flex align-items-center justify-content-center">
             <div class="card p-4" style="width:320px;">
                 <h5 class="mb-3">Eliminar Orden</h5>
-                <p>¿Eliminar orden <strong>#<span x-text="selected.id"></span></strong>?</p>
+                <p>Â¿Eliminar orden <strong>#<span x-text="selected.id"></span></strong>?</p>
                 <form x-on:submit.prevent="submitDelete" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" x-model="selected.id" />
@@ -366,9 +366,19 @@
               this.editUser   = { id:o.usuarioId };
               this.editDisp   = { id:o.dispositivoId };
               this.editClientTerm = o.clienteText;
+              this.editClientResults = [];
               fetch(`/Dispositivo/ByClient?clientId=${o.clienteId}`)
                 .then(r => r.json())
-                .then(j => this.editClientDevices = j);
+                .then(j => {
+                  this.editClientDevices = j;
+                  // Asegurar que el dispositivo actual estÃ© seleccionado
+                  if (o.dispositivoId && j.some(d => d.id === o.dispositivoId)) {
+                    this.editDisp = { id: o.dispositivoId };
+                  } else if (j.length > 0) {
+                    // Si el dispositivo original no existe, seleccionar el primero
+                    this.editDisp = { id: j[0].id };
+                  }
+                });
               this.showEdit = true;
             },
             closeEdit() { this.showEdit = false; },
@@ -394,20 +404,40 @@
               this[mode + 'Client'] = c;
               this[mode + 'ClientResults'] = [];
               this[mode + 'ClientTerm'] = c.text;
+              // Resetear dispositivo seleccionado
+              this[mode + 'Disp'] = { id: null };
               fetch(`/Dispositivo/ByClient?clientId=${c.id}`)
                 .then(r => r.json())
-                .then(j => this[mode + 'ClientDevices'] = j);
+                .then(j => {
+                  this[mode + 'ClientDevices'] = j;
+                  // Seleccionar automÃ¡ticamente el primer dispositivo si existe
+                  if (j.length > 0) {
+                    this[mode + 'Disp'] = { id: j[0].id };
+                  }
+                });
             },
 
             submitAdd() {
               const f = this.$refs.addForm;
+              // Validar que se haya seleccionado un dispositivo
+              if (!this.addDisp.id) {
+                alert('Por favor selecciona un dispositivo');
+                return;
+              }
               // Asegura que el hidden input tenga el valor
-              f.querySelector('input[name="IdDispositivo"]').value = this.addDisp.id;
+              const hiddenInput = f.querySelector('input[name="IdDispositivo"]');
+              hiddenInput.value = this.addDisp.id;
               f.submit();
             },
             submitEdit() {
               const f = this.$refs.editForm;
-              f.querySelector('input[name="IdDispositivo"]').value = this.editDisp.id;
+              // Validar que se haya seleccionado un dispositivo
+              if (!this.editDisp.id) {
+                alert('Por favor selecciona un dispositivo');
+                return;
+              }
+              const hiddenInput = f.querySelector('input[name="IdDispositivo"]');
+              hiddenInput.value = this.editDisp.id;
               f.submit();
             },
             submitDelete() {
