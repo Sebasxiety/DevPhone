@@ -1,72 +1,425 @@
 @model DevPhone.ViewModels.LoginVM
 @{
     ViewData["Title"] = "Iniciar sesión";
+    Layout = null;
 }
 
-<div x-data="{ showPassword: false }"
-     class="d-flex justify-content-center align-items-center"
-     style="height: calc(100vh - 56px - 56px);">
-    <div class="card p-4"
-         style="width: 320px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-        <h4 class="mb-4 text-center">@ViewData["Title"]</h4>
-        <form asp-action="Login" method="post" id="loginForm">
-            @Html.AntiForgeryToken()
-            <div class="mb-3">
-                <label asp-for="Username" class="form-label"></label>
-                <input asp-for="Username" class="form-control" placeholder="Usuario" autocomplete="username" />
-                <span asp-validation-for="Username" class="text-danger"></span>
-            </div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DevPhone</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.1/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --border-radius: 12px;
+            --shadow-light: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow-medium: 0 8px 32px rgba(0,0,0,0.12);
+            --shadow-strong: 0 12px 40px rgba(0,0,0,0.15);
+        }
 
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <div class="input-group">
+        body {
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a" cx="50%" cy="50%"><stop offset="0%" style="stop-color:rgba(255,255,255,0.1)"/><stop offset="100%" style="stop-color:rgba(255,255,255,0)"/></radialGradient></defs><circle cx="200" cy="300" r="150" fill="url(%23a)"/><circle cx="800" cy="200" r="100" fill="url(%23a)"/><circle cx="300" cy="700" r="120" fill="url(%23a)"/><circle cx="700" cy="800" r="80" fill="url(%23a)"/></svg>');
+            opacity: 0.3;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @@keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: var(--shadow-strong);
+            padding: 3rem;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .brand-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-gradient);
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-medium);
+            transform: rotate(-5deg);
+            transition: transform 0.3s ease;
+        }
+
+        .brand-logo:hover {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .brand-logo i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .brand-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark-text);
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-subtitle {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+            font-weight: 400;
+        }
+
+        .form-floating {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-floating > .form-control {
+            height: 58px;
+            padding: 1rem 1rem 0.5rem;
+            border: 2px solid #e9ecef;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .form-floating > .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+            background: white;
+        }
+
+        .form-floating > label {
+            padding: 1rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .password-toggle:hover {
+            color: #495057;
+            background: rgba(108, 117, 125, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            height: 58px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: var(--border-radius);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            transform: none;
+            cursor: not-allowed;
+        }
+
+        .spinner-border-sm {
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            color: #721c24;
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: floatShapes 15s linear infinite;
+        }
+
+        .shape:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border-radius: 50%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border-radius: 8px;
+            animation-delay: 5s;
+        }
+
+        .shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border-radius: 20px;
+            animation-delay: 10s;
+        }
+
+        @@keyframes floatShapes {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(15px) rotate(240deg); }
+        }
+
+        @@media (max-width: 768px) {
+            .login-card {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .brand-logo {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .brand-logo i {
+                font-size: 2rem;
+            }
+            
+            .brand-name {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div x-data="{ showPassword: false }" class="login-container">
+        <div class="login-card">
+            <!-- Brand Section -->
+            <div class="brand-section">
+                <div class="brand-logo">
+                    <i class="bi bi-phone"></i>
+                </div>
+                <h1 class="brand-name">Phone Place</h1>
+                <p class="brand-subtitle">Servicios Técnicos Profesionales</p>
+            </div>
+            <!-- Login Form -->
+            <form asp-action="Login" method="post" id="loginForm">
+                @Html.AntiForgeryToken()
+                
+                <!-- Username Field -->
+                <div class="form-floating">
+                    <input asp-for="Username" 
+                           class="form-control" 
+                           placeholder="Usuario" 
+                           autocomplete="username" 
+                           required />
+                    <label asp-for="Username">
+                        <i class="bi bi-person me-2"></i>Nombre de usuario
+                    </label>
+                    <span asp-validation-for="Username" class="text-danger small"></span>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-floating position-relative">
                     <input asp-for="Password"
                            :type="showPassword ? 'text' : 'password'"
-                           class="form-control"
+                           class="form-control pe-5"
                            placeholder="Contraseña"
-                           autocomplete="current-password" />
+                           autocomplete="current-password"
+                           required />
+                    <label asp-for="Password">
+                        <i class="bi bi-lock me-2"></i>Contraseña
+                    </label>
                     <button type="button"
-                            class="btn btn-outline-secondary"
+                            class="password-toggle"
                             x-on:click="showPassword = !showPassword"
-                            tabindex="-1">
+                            tabindex="-1"
+                            title="Mostrar/Ocultar contraseña">
                         <i class="bi" :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
                     </button>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
                 </div>
-                <span asp-validation-for="Password" class="text-danger d-block mt-1"></span>
-            </div>
 
-            <button type="submit"
-                    class="btn btn-primary w-100 py-2"
-                    id="loginButton">
-                <span class="spinner-border spinner-border-sm me-2 d-none" id="loginSpinner"></span>
-                <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
-            </button>
+                <!-- Login Button -->
+                <button type="submit"
+                        class="login-btn"
+                        id="loginButton">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" id="loginSpinner"></span>
+                    <i class="bi bi-box-arrow-in-right me-2" id="loginIcon"></i>
+                    <span id="loginText">Iniciar Sesión</span>
+                </button>
 
-            <div asp-validation-summary="All" class="text-danger mt-2"></div>
-            <div id="loginError" class="text-danger mt-2 d-none"></div>
-        </form>
+                <!-- Error Messages -->
+                <div asp-validation-summary="All" class="error-message d-none" id="validationSummary">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <span>Por favor, corrige los errores</span>
+                </div>
+                <div id="loginError" class="error-message d-none">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span id="errorText"></span>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-@section Scripts {
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.1/dist/sweetalert2.all.min.js"></script>
+    
     <script>
         $(document).ready(function() {
             const $form = $('#loginForm');
             const $button = $('#loginButton');
             const $spinner = $('#loginSpinner');
             const $errorDiv = $('#loginError');
+            
+            // Verificar que los elementos existan
+            console.log('Elementos encontrados:');
+            console.log('Form:', $form.length);
+            console.log('Button:', $button.length);
+            console.log('Spinner:', $spinner.length);
+            console.log('ErrorDiv:', $errorDiv.length);
+            console.log('ErrorText:', $('#errorText').length);
 
             // Mejorar el manejo del formulario de login
             $form.on('submit', function(e) {
                 e.preventDefault();
                 
                 // Limpiar errores previos
-                $errorDiv.addClass('d-none').text('');
+                $errorDiv.addClass('d-none');
+                $('#errorText').text('');
                 $('.text-danger').not($errorDiv).text('');
                 
                 // Mostrar indicador de carga
                 $button.prop('disabled', true);
                 $spinner.removeClass('d-none');
+                $('#loginText').text('Iniciando sesión...');
+                $('#loginIcon').addClass('d-none');
                 
                 const username = $('#Username').val().trim();
                 const password = $('#Password').val();
@@ -86,7 +439,13 @@
                     return;
                 }
 
-                // Realizar login con AJAX
+                // Configurar timeout de seguridad
+                window.loginTimeout = setTimeout(() => {
+                    console.log('Timeout alcanzado - usando fallback');
+                    fallbackSubmit();
+                }, 10000); // 10 segundos timeout
+
+                // Intentar login con AJAX primero
                 performLogin(username, password);
             });
 
@@ -102,10 +461,18 @@
                         },
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
-                        }
+                        },
+                        timeout: 8000, // 8 segundos timeout
+                        dataType: 'json'
                     });
 
-                    if (response.success) {
+                    // Limpiar timeout de seguridad
+                    if (window.loginTimeout) {
+                        clearTimeout(window.loginTimeout);
+                    }
+
+                    // Verificar respuesta exitosa
+                    if (response && response.success === true) {
                         // Login exitoso
                         Swal.fire({
                             title: '¡Bienvenido!',
@@ -119,18 +486,79 @@
                             window.location.href = returnUrl || '/Home/Index';
                         });
                     } else {
-                        showError(response.message || 'Credenciales inválidas');
+                        // Login fallido
+                        let errorMsg = 'Credenciales inválidas. Verifica tu usuario y contraseña.';
+                        
+                        if (response) {
+                            if (response.message && response.message.trim() !== '') {
+                                errorMsg = response.message;
+                            } else if (response.error && response.error.trim() !== '') {
+                                errorMsg = response.error;
+                            } else if (response.Message && response.Message.trim() !== '') {
+                                errorMsg = response.Message;
+                            }
+                        }
+                        
+                        console.log('Login fallido - mensaje:', errorMsg);
+                        showError(errorMsg);
                         resetButton();
                     }
                 } catch (xhr) {
-                    let errorMessage = 'Error de conexión. Inténtalo de nuevo.';
+                    // Limpiar timeout de seguridad
+                    if (window.loginTimeout) {
+                        clearTimeout(window.loginTimeout);
+                    }
                     
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
+                    let errorMessage = 'Credenciales inválidas. Verifica tu usuario y contraseña.';
+                    
+                    console.log('Error AJAX:', xhr); // Debug
+                    console.log('Status:', xhr.status, 'StatusText:', xhr.statusText);
+                    console.log('ResponseText:', xhr.responseText);
+                    
+                    // Manejar diferentes tipos de errores
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.success === false) {
+                            errorMessage = xhr.responseJSON.message || 'Credenciales inválidas. Verifica tu usuario y contraseña.';
+                        } else if (xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                    } else if (xhr.responseText && xhr.responseText.includes('<!DOCTYPE') || xhr.responseText.includes('<html')) {
+                        // Es una página HTML (probablemente con errores de validación)
+                        try {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(xhr.responseText, 'text/html');
+                            const validationErrors = doc.querySelectorAll('.field-validation-error, .validation-summary-errors li, .text-danger');
+                            
+                            if (validationErrors.length > 0) {
+                                let errorText = '';
+                                validationErrors.forEach(error => {
+                                    const text = error.textContent.trim();
+                                    if (text && text.length > 0) {
+                                        errorText = text;
+                                        return;
+                                    }
+                                });
+                                if (errorText) {
+                                    errorMessage = errorText;
+                                }
+                            }
+                        } catch (e) {
+                            console.log('Error parsing HTML response:', e);
+                            errorMessage = 'Usuario o contraseña incorrectos.';
+                        }
                     } else if (xhr.status === 400) {
-                        errorMessage = 'Datos inválidos. Verifica tu información.';
+                        errorMessage = 'Usuario o contraseña incorrectos.';
+                    } else if (xhr.status === 401) {
+                        errorMessage = 'Usuario o contraseña incorrectos.';
+                    } else if (xhr.status === 404) {
+                        errorMessage = 'Servicio no disponible. Inténtalo más tarde.';
                     } else if (xhr.status === 500) {
                         errorMessage = 'Error del servidor. Inténtalo más tarde.';
+                    } else if (xhr.statusText === 'timeout') {
+                        errorMessage = 'La conexión tardó demasiado. Inténtalo de nuevo.';
+                    } else if (xhr.status === 0) {
+                        // Posible problema de conectividad
+                        errorMessage = 'Sin conexión al servidor. Verifica tu conexión a internet.';
                     }
                     
                     showError(errorMessage);
@@ -139,12 +567,61 @@
             }
 
             function showError(message) {
-                $errorDiv.text(message).removeClass('d-none');
+                console.log('Mostrando error:', message); // Debug
+                
+                // Verificar que el mensaje no esté vacío
+                if (!message || message.trim() === '') {
+                    message = 'Ha ocurrido un error. Inténtalo de nuevo.';
+                }
+                
+                // Limpiar errores previos y ocultar
+                $errorDiv.addClass('d-none').hide();
+                
+                // Establecer el mensaje ANTES de mostrar
+                const $errorTextElement = $('#errorText');
+                $errorTextElement.text(message);
+                
+                // Verificar que el texto se estableció correctamente
+                console.log('Texto establecido:', $errorTextElement.text());
+                
+                // Método alternativo: establecer HTML directamente si el text() falla
+                if ($errorTextElement.text().trim() === '') {
+                    console.log('Texto vacío, usando innerHTML como fallback');
+                    $errorTextElement[0].innerHTML = message;
+                }
+                
+                // Mostrar el error con animación
+                setTimeout(() => {
+                    $errorDiv.removeClass('d-none').fadeIn(300);
+                    
+                    // Verificación final - si aún está vacío, mostrar SweetAlert
+                    if ($errorTextElement.text().trim() === '') {
+                        console.log('Error: no se pudo mostrar el mensaje en el div, usando SweetAlert');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de autenticación',
+                            text: message,
+                            confirmButtonColor: '#667eea'
+                        });
+                    }
+                }, 50); // Pequeño delay para asegurar que el texto esté establecido
+                
+                // También mostrar con SweetAlert como fallback para errores críticos
+                if (message.includes('conexión') || message.includes('servidor')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: message,
+                        confirmButtonColor: '#667eea'
+                    });
+                }
             }
 
             function resetButton() {
                 $button.prop('disabled', false);
                 $spinner.addClass('d-none');
+                $('#loginText').text('Iniciar Sesión');
+                $('#loginIcon').removeClass('d-none');
             }
 
             // Permitir envío con Enter
@@ -154,8 +631,55 @@
                 }
             });
 
+            // Función de fallback para envío tradicional del formulario
+            function fallbackSubmit() {
+                console.log('Usando fallback - envío tradicional del formulario');
+                
+                // Restaurar el comportamiento normal del formulario
+                $form.off('submit');
+                
+                // Crear un formulario temporal para envío tradicional
+                const tempForm = $('<form>', {
+                    method: 'POST',
+                    action: '/Account/Login'
+                });
+                
+                tempForm.append($('<input>', {
+                    type: 'hidden',
+                    name: 'Username',
+                    value: $('#Username').val()
+                }));
+                
+                tempForm.append($('<input>', {
+                    type: 'hidden',
+                    name: 'Password',
+                    value: $('#Password').val()
+                }));
+                
+                tempForm.append($('<input>', {
+                    type: 'hidden',
+                    name: '__RequestVerificationToken',
+                    value: $('input[name="__RequestVerificationToken"]').val()
+                }));
+                
+                $('body').append(tempForm);
+                tempForm.submit();
+            }
+
+            // Manejar casos donde el usuario presiona Enter
+            $('#Username, #Password').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $form.submit();
+                }
+            });
+
             // Enfocar el primer campo al cargar
             $('#Username').focus();
+
+            // Timeout de seguridad para detectar si el AJAX no está funcionando
+            window.loginTimeout = null;
         });
     </script>
-}
+</body>
+</html>

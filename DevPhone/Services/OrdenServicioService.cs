@@ -17,6 +17,8 @@ namespace DevPhone.Services
                 .Include(o => o.Cliente)
                 .Include(o => o.Usuario)
                 .Include(o => o.Dispositivo)
+                .Include(o => o.DetallesRepuesto)
+                    .ThenInclude(d => d.Repuesto)
                 .ToListAsync();
 
         public Task<MOrdenServicio> GetByIdAsync(int id) =>
@@ -24,12 +26,15 @@ namespace DevPhone.Services
                 .Include(o => o.Cliente)
                 .Include(o => o.Usuario)
                 .Include(o => o.Dispositivo)
+                .Include(o => o.DetallesRepuesto)
+                    .ThenInclude(d => d.Repuesto)
                 .FirstOrDefaultAsync(o => o.IdOrden == id);
 
-        public async Task CreateAsync(MOrdenServicio orden)
+        public async Task<MOrdenServicio> CreateAsync(MOrdenServicio orden)
         {
             _context.OrdenesServicio.Add(orden);
             await _context.SaveChangesAsync();
+            return orden;
         }
 
         public async Task UpdateAsync(MOrdenServicio orden)

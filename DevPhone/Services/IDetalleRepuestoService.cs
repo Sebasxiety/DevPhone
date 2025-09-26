@@ -1,4 +1,4 @@
-﻿using DevPhone.Models;
+using DevPhone.Models;
 
 namespace DevPhone.Services
 {
@@ -6,6 +6,7 @@ namespace DevPhone.Services
     {
         Task<List<MDetalleRepuesto>> GetAllAsync();
         Task<MDetalleRepuesto> GetByIdAsync(int id);
+        Task<List<MDetalleRepuesto>> GetByOrdenIdAsync(int idOrden);
         Task CreateAsync(MDetalleRepuesto detalle);
         Task UpdateAsync(MDetalleRepuesto detalle);
         Task DeleteAsync(int id);

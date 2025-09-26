@@ -80,7 +80,7 @@ namespace DevPhone.Controllers
                 .Where(d => d.IdCliente == clientId)
                 .Select(d => new {
                     id = d.IdDispositivo,
-                    text = d.Serie
+                    text = $"{d.Marca} - {d.Modelo}"
                 });
             return Json(list);
         }

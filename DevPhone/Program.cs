@@ -1,5 +1,6 @@
 using DevPhone.Models;
 using DevPhone.Models.Configuration;
+using DevPhone.Models.DTOs;
 using DevPhone.Services;
 using DevPhone.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -31,7 +32,11 @@ builder.Services.AddScoped<IDetalleRepuestoService, DetalleRepuestoService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 
-// 5) Autenticación híbrida (Cookies + JWT)
+// 5) Configuración y servicio de Email
+builder.Services.Configure<EmailConfigurationDto>(builder.Configuration.GetSection("EmailConfiguration"));
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// 6) Autenticación híbrida (Cookies + JWT)
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

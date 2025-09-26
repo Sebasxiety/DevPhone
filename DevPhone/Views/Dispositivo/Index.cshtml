@@ -1,12 +1,159 @@
 @model IEnumerable<DevPhone.Models.MDispositivo>
 @{
-    ViewData["Title"] = "GestiÛn de Dispositivos";
+    ViewData["Title"] = "Gesti√≥n de Dispositivos";
 }
 
 <style>
     [x-cloak] {
         display: none !important
-    }</style>
+    }
+
+    /* Estilos mejorados para tabla */
+    .table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        border: none;
+    }
+
+    .table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 1rem 0.75rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table tbody td {
+        padding: 1rem 0.75rem;
+        border-top: 1px solid #f1f5f9;
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8fafc;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px -2px rgb(0 0 0 / 0.1);
+    }
+
+    .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Botones de acci√≥n mejorados */
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        border: none;
+        color: white;
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border: none;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Modal backdrop mejorado - Oculta completamente el header */
+    .modal-backdrop-custom {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.9) !important;
+        backdrop-filter: blur(10px) !important;
+        z-index: 9999 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Forzar ocultaci√≥n del header cuando modal est√° activo */
+    .modal-active .main-header {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+
+    .modal-active body {
+        overflow: hidden !important;
+    }
+
+    /* Bloquear scroll cuando modal est√° activo */
+    body:has(.modal-backdrop-custom) {
+        overflow: hidden !important;
+    }
+
+    /* Asegurar que el modal est√© sobre todo */
+    .modal-backdrop-custom {
+        isolation: isolate !important;
+    }
+
+    /* Estilos mejorados para tarjetas de modal */
+    .modal-backdrop-custom .card {
+        background: white !important;
+        border-radius: 16px !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(20px) !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+
+    .modal-backdrop-custom .card .btn-close {
+        background: none !important;
+        opacity: 0.8 !important;
+    }
+
+    .modal-backdrop-custom .card .btn-close:hover {
+        opacity: 1 !important;
+    }
+
+    /* Responsive design */
+    @@media (max-width: 768px) {
+        .table {
+            font-size: 0.8rem;
+        }
+        
+        .table thead th,
+        .table tbody td {
+            padding: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
 
 <div x-data="deviceManager()" class="container-fluid">
 
@@ -26,7 +173,7 @@
         </div>
     }
 
-    <!-- TÌtulo + BotÛn Nuevo -->
+    <!-- T√≠tulo + Bot√≥n Nuevo -->
     <div class="d-flex justify-content-between align-items-center my-4">
         <h2>@ViewData["Title"]</h2>
         <button class="btn btn-primary" x-on:click="openAdd()">
@@ -82,8 +229,8 @@
 
     <!-- Modal Agregar -->
     <template x-if="showAdd">
-        <div x-cloak class="modal-backdrop d-flex align-items-center justify-content-center"
-             style="background:rgba(0,0,0,0.5); z-index:1050;">
+        <div x-cloak class="modal-backdrop-custom d-flex align-items-center justify-content-center"
+             style="z-index:9999 !important;">
             <div class="card p-4" style="width:420px;">
                 <div class="d-flex justify-content-between mb-3">
                     <h5>Nuevo Dispositivo</h5>
@@ -105,7 +252,7 @@
                         <input name="Marca" class="form-control" />
                     </div>
 
-                    <!-- AquÌ va el combo de Estados -->
+                    <!-- Aqu√≠ va el combo de Estados -->
                     <div class="mb-2">
                         <label class="form-label">Estado</label>
                         <select name="EstadoActual" class="form-select" x-model="addSelectedState">
@@ -115,7 +262,7 @@
                         </select>
                     </div>
 
-                    <!-- B˙squeda Cliente -->
+                    <!-- B√∫squeda Cliente -->
                     <div class="mb-2">
                         <label class="form-label">Cliente</label>
                         <input type="text" class="form-control"
@@ -146,8 +293,8 @@
 
     <!-- Modal Editar -->
     <template x-if="showEdit">
-        <div x-cloak class="modal-backdrop d-flex align-items-center justify-content-center"
-             style="background:rgba(0,0,0,0.5); z-index:1050;">
+        <div x-cloak class="modal-backdrop-custom d-flex align-items-center justify-content-center"
+             style="z-index:9999 !important;">
             <div class="card p-4" style="width:420px;">
                 <div class="d-flex justify-content-between mb-3">
                     <h5>Editar Dispositivo</h5>
@@ -210,10 +357,10 @@
 
     <!-- Modal Eliminar (sin cambios) -->
     <template x-if="showDelete">
-        <div x-cloak class="modal-backdrop d-flex align-items-center justify-content-center">
+        <div x-cloak class="modal-backdrop-custom d-flex align-items-center justify-content-center" style="z-index:9999 !important;">
             <div class="card p-4" style="width:320px;">
                 <h5 class="mb-3">Eliminar Dispositivo</h5>
-                <p>øEliminar dispositivo <strong x-text="deleteData.serie"></strong>?</p>
+                <p>¬øEliminar dispositivo <strong x-text="deleteData.serie"></strong>?</p>
                 <form x-on:submit.prevent="submitDelete" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" x-model="deleteData.id" />
@@ -255,22 +402,34 @@
           this.addClientTerm=''; this.addClientResults=[]; this.addSelectedClient={};
           this.addSelectedState = this.deviceStates[0];
           this.showAdd = true;
+          this.toggleHeaderVisibility(true);
         },
-        closeAdd(){ this.showAdd=false; },
+        closeAdd(){ 
+          this.showAdd=false; 
+          this.toggleHeaderVisibility(false);
+        },
 
         openEdit(d) {
           this.editData={ ...d };
           this.editClientTerm = d.clienteText;
           this.editSelectedClient = { id:d.clienteId, text:d.clienteText };
           this.showEdit = true;
+          this.toggleHeaderVisibility(true);
         },
-        closeEdit(){ this.showEdit=false; },
+        closeEdit(){ 
+          this.showEdit=false; 
+          this.toggleHeaderVisibility(false);
+        },
 
         openDelete(d) {
           this.deleteData={ id:d.id, serie:d.serie };
           this.showDelete = true;
+          this.toggleHeaderVisibility(true);
         },
-        closeDelete(){ this.showDelete=false; },
+        closeDelete(){ 
+          this.showDelete=false; 
+          this.toggleHeaderVisibility(false);
+        },
 
         async searchClients(mode) {
           const term = mode==='add'? this.addClientTerm : this.editClientTerm;
@@ -307,6 +466,23 @@
           const f = event.target;
           f.action = `/Dispositivo/Delete/${this.deleteData.id}`;
           f.submit();
+        },
+        toggleHeaderVisibility(hide) {
+          const header = document.querySelector('.main-header');
+          const body = document.body;
+          if (hide) {
+            header.style.display = 'none';
+            header.style.visibility = 'hidden';
+            header.style.opacity = '0';
+            body.classList.add('modal-active');
+            body.style.overflow = 'hidden';
+          } else {
+            header.style.display = '';
+            header.style.visibility = '';
+            header.style.opacity = '';
+            body.classList.remove('modal-active');
+            body.style.overflow = '';
+          }
         }
       }
     }

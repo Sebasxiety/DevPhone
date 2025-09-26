@@ -18,6 +18,14 @@ namespace DevPhone.Models
         [Required, StringLength(50)]
         public string Estado { get; set; }
 
+        public DateTime? FechaCompletado { get; set; }
+
+        [Required, Column(TypeName = "decimal(18,2)")]
+        public decimal PrecioServicio { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal PrecioTotal { get; set; }
+
         // FKs
         [ForeignKey(nameof(Cliente))]
         public int IdCliente { get; set; }
@@ -34,8 +42,27 @@ namespace DevPhone.Models
         [ValidateNever]
         public virtual MDispositivo Dispositivo { get; set; }
 
-        // Navegación
+        // Propiedades calculadas (no mapeadas a la base de datos)
+        [NotMapped]
+        public decimal SubtotalRepuestos => DetallesRepuesto?.Sum(d => d.Cantidad * d.Repuesto.PrecioUnitario) ?? 0;
+
+        [NotMapped]
+        public decimal SubtotalSinIva => PrecioServicio + SubtotalRepuestos;
+
+        [NotMapped]
+        public decimal IVA => SubtotalSinIva * 0.15m; // IVA del 15%
+
+        [NotMapped]
+        public decimal TotalConIva => SubtotalSinIva + IVA;
+
+        // Navegaciï¿½n
         [ValidateNever]
         public virtual ICollection<MDetalleRepuesto> DetallesRepuesto { get; set; } = new List<MDetalleRepuesto>();
+
+        // Mï¿½todo para calcular y actualizar el precio total
+        public void CalcularPrecioTotal()
+        {
+            PrecioTotal = TotalConIva;
+        }
     }
 }

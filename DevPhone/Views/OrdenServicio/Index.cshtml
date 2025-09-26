@@ -9,9 +9,161 @@
         display: none !important;
     }
 
+    /* Estilos mejorados para tabla */
+    .table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        border: none;
+    }
+
+    .table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 1rem 0.75rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table tbody td {
+        padding: 1rem 0.75rem;
+        border-top: 1px solid #f1f5f9;
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8fafc;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px -2px rgb(0 0 0 / 0.1);
+    }
+
+    .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Botones de acción mejorados */
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        border: none;
+        color: white;
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border: none;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Modal backdrop mejorado - Oculta completamente el header */
     .modal-backdrop {
-        background: rgba(0,0,0,0.5);
-        z-index: 1050;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.9) !important;
+        backdrop-filter: blur(10px) !important;
+        z-index: 9999 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Forzar ocultación del header cuando modal está activo */
+    .modal-active .main-header {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+
+    .modal-active body {
+        overflow: hidden !important;
+    }
+
+    /* Bloquear scroll cuando modal está activo */
+    body:has(.modal-backdrop) {
+        overflow: hidden !important;
+    }
+
+    /* Asegurar que el modal esté sobre todo */
+    .modal-backdrop {
+        isolation: isolate !important;
+    }
+
+    /* Estilos mejorados para tarjetas de modal */
+    .modal-backdrop .card {
+        background: white !important;
+        border-radius: 16px !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(20px) !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+
+    .modal-backdrop .card .btn-close {
+        background: none !important;
+        opacity: 0.8 !important;
+    }
+
+    .modal-backdrop .card .btn-close:hover {
+        opacity: 1 !important;
+    }
+
+    /* Responsive design */
+    @@media (max-width: 768px) {
+        .table {
+            font-size: 0.8rem;
+        }
+        
+        .table thead th,
+        .table tbody td {
+            padding: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
     }
 </style>
 
@@ -52,6 +204,8 @@
                 <th>Cliente</th>
                 <th>Técnico</th>
                 <th>Dispositivo</th>
+                <th>Precio Servicio</th>
+                <th>Total</th>
                 <th style="width:120px">Acciones</th>
             </tr>
         </thead>
@@ -64,8 +218,10 @@
                     <td>@o.DescripcionFalla</td>
                     <td>@o.Estado</td>
                     <td>@o.Cliente.Nombre @o.Cliente.Apellido</td>
-                    <td>@o.Usuario.NombreUsuario</td>
-                    <td>@o.Dispositivo.Serie</td>
+                    <td>@o.Usuario.Nombres</td>
+                    <td>@o.Dispositivo.Modelo - @o.Dispositivo.Marca</td>
+                    <td>@o.PrecioServicio.ToString("C")</td>
+                    <td>@o.PrecioTotal.ToString("C")</td>
                     <td>
                         <button class="btn btn-sm btn-warning me-1"
                                 x-on:click="openEdit({
@@ -75,9 +231,17 @@
                       clienteId: @o.IdCliente,
                       clienteText: '@o.Cliente.Nombre @o.Cliente.Apellido',
                       usuarioId: @o.IdUsuario,
-                      dispositivoId: @o.IdDispositivo
+                      dispositivoId: @o.IdDispositivo,
+                      dispositivoText: '@o.Dispositivo.Serie',
+                      fecha: '@o.Fecha.ToString("yyyy-MM-dd")',
+                      precioServicio: @o.PrecioServicio.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
                     })">
                             <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success me-1"
+                                x-on:click="finalizarOrden(@o.IdOrden)"
+                                title="Enviar factura por email al cliente">
+                            <i class="bi bi-envelope"></i> Enviar factura
                         </button>
                         <button class="btn btn-sm btn-danger"
                                 x-on:click="openDelete({ id:@o.IdOrden })">
@@ -93,8 +257,9 @@
     <template x-if="showAdd">
         <div x-cloak
              class="modal-backdrop position-fixed top-0 start-0 w-100 h-100
-                d-flex align-items-center justify-content-center">
-            <div class="card p-4" style="width:500px;">
+                d-flex align-items-center justify-content-center"
+             style="z-index:9999 !important;">
+            <div class="card p-4" style="width:1200px; max-height:90vh; overflow-y:auto;">
                 <div class="d-flex justify-content-between mb-3">
                     <h5>Nueva Orden de Servicio</h5>
                     <button class="btn-close" x-on:click="closeAdd()"></button>
@@ -105,79 +270,243 @@
                       asp-action="Create">
                     @Html.AntiForgeryToken()
 
-                    <div class="mb-2">
-                        <label class="form-label">Descripción de la falla</label>
-                        <textarea name="DescripcionFalla" class="form-control"></textarea>
+                    <div class="row">
+                        <!-- Columna Izquierda: Información Esencial -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">Información de la Orden</h6>
+                            
+                            <!-- 1. Cliente -->
+                            <div class="mb-3 position-relative">
+                                <label class="form-label">Cliente *</label>
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="Buscar el cliente"
+                                       x-model="addClientTerm"
+                                       x-on:input.debounce="searchClient('add')">
+                                <ul class="list-group position-absolute w-100 z-3"
+                                    x-show="addClientResults.length">
+                                    <template x-for="c in addClientResults" :key="c.id">
+                                        <li class="list-group-item list-group-item-action"
+                                            x-on:click="selectClient('add', c)"
+                                            x-text="c.text"></li>
+                                    </template>
+                                </ul>
+                                <input type="hidden" name="IdCliente" x-model="addClient.id" />
+                                <div x-show="addClient.id" class="mt-1">
+                                    <small class="text-success">
+                                        <i class="bi bi-check-circle"></i> Cliente seleccionado: <span x-text="addClient.text"></span>
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- 2. Dispositivo -->
+                            <div class="mb-3">
+                                <label class="form-label">Dispositivo *</label>
+                                <input type="hidden" name="IdDispositivo" x-model="addDisp.id" />
+                                <select class="form-select"
+                                        x-model="addDisp.id"
+                                        :disabled="!addClient.id"
+                                        required>
+                                    <option value="" disabled>Seleccione dispositivo</option>
+                                    <template x-for="d in addClientDevices" :key="d.id">
+                                        <option :value="d.id" x-text="d.text"></option>
+                                    </template>
+                                </select>
+                                <div x-show="!addClient.id" class="form-text text-muted">
+                                    Primero seleccione un cliente
+                                </div>
+                            </div>
+
+                            <!-- 3. Técnico -->
+                            <div class="mb-3">
+                                <label class="form-label">Técnico Asignado *</label>
+                                <select name="IdUsuario"
+                                        class="form-select"
+                                        x-model="addUser.id"
+                                        required>
+                                    <option value="" disabled>Seleccione técnico</option>
+                                    <template x-for="t in technicians" :key="t.id">
+                                        <option :value="t.id" x-text="t.text"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <!-- 4. Descripción de la falla -->
+                            <div class="mb-3">
+                                <label class="form-label">Descripción de la Falla *</label>
+                                <textarea name="DescripcionFalla" 
+                                          class="form-control" 
+                                          rows="3"
+                                          placeholder="Describa el problema reportado por el cliente"
+                                          required></textarea>
+                            </div>
+
+                            <!-- 5. Precio del Servicio -->
+                            <div class="mb-3">
+                                <label class="form-label">Precio del Servicio *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" 
+                                           name="PrecioServicio" 
+                                           class="form-control" 
+                                           x-model.number="precioServicio"
+                                           step="0.01" 
+                                           min="0" 
+                                           placeholder="0.00"
+                                           required>
+                                </div>
+                            </div>
+
+                            <!-- 6. Estado -->
+                            <div class="mb-3">
+                                <label class="form-label">Estado Inicial</label>
+                                <select name="Estado"
+                                        class="form-select"
+                                        x-model="addState"
+                                        required>
+                                    <option value="" disabled>Seleccione estado</option>
+                                    <template x-for="s in orderStates" :key="s">
+                                        <option :value="s" x-text="s"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Columna Derecha: Repuestos -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">Repuestos para la Orden</h6>
+                            
+                            <!-- Agregar Repuesto -->
+                            <div class="card border-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Agregar Repuesto</h6>
+                                    <div class="row mb-2">
+                                        <div class="col-12 mb-2">
+                                            <label class="form-label">Seleccionar Repuesto</label>
+                                            <select class="form-select" x-model="selectedRepuesto">
+                                                 <option value="">Seleccionar repuesto...</option>
+                                                 <template x-for="r in repuestos" :key="r.id">
+                                                     <option :value="r.id" x-text="`${r.nombre || 'Sin nombre'} - $${(r.precio || 0).toFixed(2)}`"></option>
+                                                 </template>
+                                             </select>
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label">Cantidad</label>
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   placeholder="Cantidad" 
+                                                   x-model="cantidadRepuesto" 
+                                                   min="1"
+                                                   :max="selectedRepuesto ? repuestos.find(r => r.id == selectedRepuesto)?.stock : 999">
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label">Stock Disponible</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   readonly
+                                                   :value="selectedRepuesto ? (repuestos.find(r => r.id == selectedRepuesto)?.stock || 0) + ' unidades' : 'Seleccione repuesto'"
+                                                   :class="selectedRepuesto ? (repuestos.find(r => r.id == selectedRepuesto)?.stock > 10 ? 'bg-success-subtle' : repuestos.find(r => r.id == selectedRepuesto)?.stock > 0 ? 'bg-warning-subtle' : 'bg-danger-subtle') : 'bg-light'">
+                                        </div>
+                                        <div class="col-4 d-flex align-items-end">
+                                            <button type="button" 
+                                                    class="btn btn-success w-100" 
+                                                    x-on:click="agregarRepuesto()" 
+                                                    :disabled="!selectedRepuesto || !cantidadRepuesto || cantidadRepuesto <= 0">
+                                                <i class="bi bi-plus-circle"></i> Agregar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lista de repuestos agregados -->
+                            <div x-show="repuestosAgregados.length > 0" class="mb-3">
+                                <h6>Repuestos Agregados</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Repuesto</th>
+                                                <th>Cant.</th>
+                                                <th>Precio</th>
+                                                <th>Subtotal</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="(item, index) in repuestosAgregados" :key="index">
+                                                <tr>
+                                                    <td x-text="item.nombre" class="fw-medium"></td>
+                                                    <td x-text="item.cantidad"></td>
+                                                    <td x-text="'$' + item.precio.toFixed(2)"></td>
+                                                    <td x-text="'$' + (item.cantidad * item.precio).toFixed(2)" class="fw-bold"></td>
+                                                    <td>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-outline-danger" 
+                                                                x-on:click="quitarRepuesto(index)"
+                                                                title="Eliminar repuesto">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Resumen de costos -->
+                            <div class="card bg-light border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">Resumen de Costos</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-7">Precio del Servicio:</div>
+                                        <div class="col-5 text-end fw-bold">$<span x-text="precioServicio.toFixed(2)"></span></div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-7">Subtotal Repuestos:</div>
+                                        <div class="col-5 text-end fw-bold">$<span x-text="subtotalRepuestos.toFixed(2)"></span></div>
+                                    </div>
+                                    <hr>
+                                    <div class="row mb-2">
+                                        <div class="col-7">Subtotal sin IVA:</div>
+                                        <div class="col-5 text-end">$<span x-text="subtotalSinIva.toFixed(2)"></span></div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-7">IVA (15%):</div>
+                                        <div class="col-5 text-end">$<span x-text="iva.toFixed(2)"></span></div>
+                                    </div>
+                                    <hr class="border-primary">
+                                    <div class="row">
+                                        <div class="col-7"><strong>TOTAL:</strong></div>
+                                        <div class="col-5 text-end">
+                                            <h5 class="text-primary mb-0"><strong>$<span x-text="totalConIva.toFixed(2)"></span></strong></h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-2">
-                        <label class="form-label">Estado</label>
-                        <select name="Estado"
-                                class="form-select"
-                                x-model="addState"
-                                required>
-                            <option value="" disabled>Seleccione estado</option>
-                            <template x-for="s in orderStates" :key="s">
-                                <option :value="s" x-text="s"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <div class="mb-2 position-relative">
-                        <label class="form-label">Cliente</label>
-                        <input type="text"
-                               class="form-control"
-                               placeholder="Buscar cliente..."
-                               x-model="addClientTerm"
-                               x-on:input.debounce="searchClient('add')">
-                        <ul class="list-group position-absolute w-100 z-3"
-                            x-show="addClientResults.length">
-                            <template x-for="c in addClientResults" :key="c.id">
-                                <li class="list-group-item list-group-item-action"
-                                    x-on:click="selectClient('add', c)"
-                                    x-text="c.text"></li>
-                            </template>
-                        </ul>
-                        <input type="hidden" name="IdCliente" x-model="addClient.id" />
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label">Técnico</label>
-                        <select name="IdUsuario"
-                                class="form-select"
-                                x-model="addUser.id"
-                                required>
-                            <option value="" disabled>Seleccione técnico</option>
-                            <template x-for="t in technicians" :key="t.id">
-                                <option :value="t.id" x-text="t.text"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label">Dispositivo</label>
-                        <!-- Hidden input garantiza que el ID siempre se envíe -->
-                        <input type="hidden" name="IdDispositivo" x-model="addDisp.id" />
-                        <select class="form-select"
-                                x-model="addDisp.id"
-                                :disabled="!addClient.id"
-                                required>
-                            <option value="" disabled>Seleccione dispositivo</option>
-                            <template x-for="d in addClientDevices" :key="d.id">
-                                <option :value="d.id" x-text="d.text"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <div class="text-end mt-3">
-                        <button type="button"
-                                class="btn btn-secondary me-2"
-                                x-on:click="closeAdd()">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            Guardar
-                        </button>
+                    <!-- Botones de acción -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button"
+                                        class="btn btn-secondary"
+                                        x-on:click="closeAdd()">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                                <button type="submit" 
+                                        class="btn btn-primary"
+                                        :disabled="!addClient.id || !addDisp.id">
+                                    <i class="bi bi-check-circle"></i> Crear Orden
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -188,10 +517,11 @@
     <template x-if="showEdit">
         <div x-cloak
              class="modal-backdrop position-fixed top-0 start-0 w-100 h-100
-                d-flex align-items-center justify-content-center">
-            <div class="card p-4" style="width:500px;">
+                d-flex align-items-center justify-content-center"
+             style="z-index:9999 !important;">
+            <div class="card p-4" style="width:1200px; max-height:90vh; overflow-y:auto;">
                 <div class="d-flex justify-content-between mb-3">
-                    <h5>Editar Orden</h5>
+                    <h5>Editar Orden #<span x-text="selected.id"></span></h5>
                     <button class="btn-close" x-on:click="closeEdit()"></button>
                 </div>
                 <form x-ref="editForm"
@@ -200,81 +530,234 @@
                       method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="IdOrden" x-model="selected.id" />
+                    <input type="hidden" name="IdCliente" x-model="selected.idCliente" />
+                    <input type="hidden" name="IdDispositivo" x-model="selected.idDispositivo" />
 
-                    <div class="mb-2">
-                        <label class="form-label">Descripción de la falla</label>
-                        <textarea name="DescripcionFalla"
-                                  class="form-control"
-                                  x-model="selected.descripcion"></textarea>
+                    <div class="row">
+                        <!-- Columna Izquierda: Información de la Orden -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">Información de la Orden</h6>
+                            
+                            <!-- 1. Cliente (Solo lectura) -->
+                            <div class="mb-3">
+                                <label class="form-label">Cliente</label>
+                                <input type="text" 
+                                       class="form-control bg-light" 
+                                       :value="selected.cliente" 
+                                       readonly>
+                                <small class="text-muted">El cliente no puede ser modificado</small>
+                            </div>
+
+                            <!-- 2. Dispositivo (Solo lectura) -->
+                            <div class="mb-3">
+                                <label class="form-label">Dispositivo</label>
+                                <input type="text" 
+                                       class="form-control bg-light" 
+                                       :value="selected.dispositivo" 
+                                       readonly>
+                                <small class="text-muted">El dispositivo no puede ser modificado</small>
+                            </div>
+
+                            <!-- 3. Técnico -->
+                            <div class="mb-3">
+                                <label class="form-label">Técnico Asignado *</label>
+                                <select name="IdUsuario"
+                                        class="form-select"
+                                        x-model="selected.idUsuario"
+                                        required>
+                                    <option value="" disabled>Seleccione técnico</option>
+                                    <template x-for="t in technicians" :key="t.id">
+                                        <option :value="t.id" x-text="t.text"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <!-- 4. Descripción de la falla -->
+                            <div class="mb-3">
+                                <label class="form-label">Descripción de la Falla *</label>
+                                <textarea name="DescripcionFalla" 
+                                          class="form-control" 
+                                          rows="3"
+                                          x-model="selected.descripcionFalla"
+                                          placeholder="Describa el problema reportado por el cliente"
+                                          required></textarea>
+                            </div>
+
+                            <!-- 5. Precio del Servicio -->
+                            <div class="mb-3">
+                                <label class="form-label">Precio del Servicio *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" 
+                                           name="PrecioServicio" 
+                                           class="form-control" 
+                                           x-model.number="selected.precioServicio"
+                                           step="0.01" 
+                                           min="0" 
+                                           placeholder="0.00"
+                                           required>
+                                </div>
+                            </div>
+
+                            <!-- 6. Estado -->
+                            <div class="mb-3">
+                                <label class="form-label">Estado *</label>
+                                <select name="Estado"
+                                        class="form-select"
+                                        x-model="selected.estado"
+                                        required>
+                                    <option value="" disabled>Seleccione estado</option>
+                                    <template x-for="s in orderStates" :key="s">
+                                        <option :value="s" x-text="s"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <!-- Fecha (Solo lectura) -->
+                            <div class="mb-3">
+                                <label class="form-label">Fecha de Creación</label>
+                                <input type="text" 
+                                       class="form-control bg-light" 
+                                       :value="new Date(selected.fecha).toLocaleDateString()" 
+                                       readonly>
+                            </div>
+                        </div>
+
+                        <!-- Columna Derecha: Repuestos -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">Repuestos para la Orden</h6>
+                            
+                            <!-- Agregar Repuesto -->
+                            <div class="card border-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Agregar Repuesto</h6>
+                                    <div class="row mb-2">
+                                        <div class="col-12 mb-2">
+                                            <label class="form-label">Seleccionar Repuesto</label>
+                                            <select class="form-select" x-model="editSelectedRepuesto">
+                                                 <option value="">Seleccionar repuesto...</option>
+                                                 <template x-for="r in repuestos" :key="r.id">
+                                                     <option :value="r.id" x-text="`${r.nombre || 'Sin nombre'} - $${(r.precio || 0).toFixed(2)}`"></option>
+                                                 </template>
+                                             </select>
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label">Cantidad</label>
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   placeholder="Cantidad" 
+                                                   x-model="editCantidadRepuesto" 
+                                                   min="1"
+                                                   :max="editSelectedRepuesto ? repuestos.find(r => r.id == editSelectedRepuesto)?.stock : 999">
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label">Stock Disponible</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   readonly
+                                                   :value="editSelectedRepuesto ? (repuestos.find(r => r.id == editSelectedRepuesto)?.stock || 0) + ' unidades' : 'Seleccione repuesto'"
+                                                   :class="editSelectedRepuesto ? (repuestos.find(r => r.id == editSelectedRepuesto)?.stock > 10 ? 'bg-success-subtle' : repuestos.find(r => r.id == editSelectedRepuesto)?.stock > 0 ? 'bg-warning-subtle' : 'bg-danger-subtle') : 'bg-light'">
+                                        </div>
+                                        <div class="col-4 d-flex align-items-end">
+                                            <button type="button" 
+                                                    class="btn btn-success w-100" 
+                                                    x-on:click="agregarRepuestoEdit()" 
+                                                    :disabled="!editSelectedRepuesto || !editCantidadRepuesto || editCantidadRepuesto <= 0">
+                                                <i class="bi bi-plus-circle"></i> Agregar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lista de repuestos agregados -->
+                            <div x-show="selected.repuestos && selected.repuestos.length > 0" class="mb-3">
+                                <h6>Repuestos de la Orden</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Repuesto</th>
+                                                <th>Cant.</th>
+                                                <th>Precio</th>
+                                                <th>Subtotal</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="(item, index) in selected.repuestos" :key="index">
+                                                <tr>
+                                                    <td x-text="item.nombre" class="fw-medium"></td>
+                                                    <td x-text="item.cantidad"></td>
+                                                    <td x-text="'$' + item.precio.toFixed(2)"></td>
+                                                    <td x-text="'$' + (item.cantidad * item.precio).toFixed(2)" class="fw-bold"></td>
+                                                    <td>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-outline-danger" 
+                                                                x-on:click="eliminarRepuestoEdit(index)"
+                                                                title="Eliminar repuesto">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Resumen de costos -->
+                            <div class="card bg-light border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">Resumen de Costos</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-7">Precio del Servicio:</div>
+                                        <div class="col-5 text-end fw-bold">$<span x-text="(selected.precioServicio || 0).toFixed(2)"></span></div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-7">Subtotal Repuestos:</div>
+                                        <div class="col-5 text-end fw-bold">$<span x-text="(selected.repuestos || []).reduce((sum, item) => sum + (item.cantidad * item.precio), 0).toFixed(2)"></span></div>
+                                    </div>
+                                    <hr>
+                                    <div class="row mb-2">
+                                        <div class="col-7">Subtotal sin IVA:</div>
+                                        <div class="col-5 text-end">$<span x-text="((selected.precioServicio || 0) + (selected.repuestos || []).reduce((sum, item) => sum + (item.cantidad * item.precio), 0)).toFixed(2)"></span></div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-7">IVA (15%):</div>
+                                        <div class="col-5 text-end">$<span x-text="(((selected.precioServicio || 0) + (selected.repuestos || []).reduce((sum, item) => sum + (item.cantidad * item.precio), 0)) * 0.15).toFixed(2)"></span></div>
+                                    </div>
+                                    <hr class="border-primary">
+                                    <div class="row">
+                                        <div class="col-7"><strong>TOTAL:</strong></div>
+                                        <div class="col-5 text-end">
+                                            <h5 class="text-primary mb-0"><strong>$<span x-text="(((selected.precioServicio || 0) + (selected.repuestos || []).reduce((sum, item) => sum + (item.cantidad * item.precio), 0)) * 1.15).toFixed(2)"></span></strong></h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-2">
-                        <label class="form-label">Estado</label>
-                        <select name="Estado"
-                                class="form-select"
-                                x-model="selected.estado"
-                                required>
-                            <option value="" disabled>Seleccione estado</option>
-                            <template x-for="s in orderStates" :key="s">
-                                <option :value="s" x-text="s"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <div class="mb-2 position-relative">
-                        <label class="form-label">Cliente</label>
-                        <input type="text"
-                               class="form-control"
-                               placeholder="Buscar cliente..."
-                               x-model="editClientTerm"
-                               x-on:input.debounce="searchClient('edit')">
-                        <ul class="list-group position-absolute w-100 z-3"
-                            x-show="editClientResults.length">
-                            <template x-for="c in editClientResults" :key="c.id">
-                                <li class="list-group-item list-group-item-action"
-                                    x-on:click="selectClient('edit', c)"
-                                    x-text="c.text"></li>
-                            </template>
-                        </ul>
-                        <input type="hidden" name="IdCliente" x-model="editClient.id" />
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label">Técnico</label>
-                        <select name="IdUsuario"
-                                class="form-select"
-                                x-model="editUser.id"
-                                required>
-                            <option value="" disabled>Seleccione técnico</option>
-                            <template x-for="t in technicians" :key="t.id">
-                                <option :value="t.id" x-text="t.text"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label">Dispositivo</label>
-                        <input type="hidden" name="IdDispositivo" x-model="editDisp.id" />
-                        <select class="form-select"
-                                x-model="editDisp.id"
-                                :disabled="!editClient.id"
-                                required>
-                            <option value="" disabled>Seleccione dispositivo</option>
-                            <template x-for="d in editClientDevices" :key="d.id">
-                                <option :value="d.id" x-text="d.text"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <div class="text-end mt-3">
-                        <button type="button"
-                                class="btn btn-secondary me-2"
-                                x-on:click="closeEdit()">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            Actualizar
-                        </button>
+                    <!-- Botones de acción -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button"
+                                        class="btn btn-secondary"
+                                        x-on:click="closeEdit()">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                                <button type="submit" 
+                                        class="btn btn-primary"
+                                        :disabled="!selected.idUsuario || !selected.estado">
+                                    <i class="bi bi-check-circle"></i> Actualizar Orden
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -285,7 +768,8 @@
     <template x-if="showDelete">
         <div x-cloak
              class="modal-backdrop position-fixed top-0 start-0 w-100 h-100
-                d-flex align-items-center justify-content-center">
+                d-flex align-items-center justify-content-center"
+             style="z-index:9999 !important;">
             <div class="card p-4" style="width:320px;">
                 <h5 class="mb-3">Eliminar Orden</h5>
                 <p>¿Eliminar orden <strong>#<span x-text="selected.id"></span></strong>?</p>
@@ -328,20 +812,55 @@
             addClientDevices: [],
             addUser: { id:null },
             addDisp: { id:null },
+            
+            // Repuestos
+            repuestos: [],
+            selectedRepuesto: '',
+            cantidadRepuesto: 1,
+            repuestosAgregados: [],
+            precioServicio: 0,
 
             // Editar
-            selected: { id:null, descripcion:'', estado:'' },
+            selected: { id:null, descripcion:'', estado:'', repuestos:[] },
             editClientTerm: '',
             editClientResults: [],
             editClient: { id:null, text:'' },
             editClientDevices: [],
             editUser: { id:null },
             editDisp: { id:null },
+            editSelectedRepuesto: '',
+            editCantidadRepuesto: 1,
+
+            // Propiedades calculadas
+            get subtotalRepuestos() {
+              return this.repuestosAgregados.reduce((sum, item) => sum + (item.cantidad * item.precio), 0);
+            },
+            
+            get subtotalSinIva() {
+              return this.precioServicio + this.subtotalRepuestos;
+            },
+            
+            get iva() {
+              return this.subtotalSinIva * 0.15;
+            },
+            
+            get totalConIva() {
+              return this.subtotalSinIva + this.iva;
+            },
 
             init() {
               fetch('/Usuario/Technicians')
                 .then(r => r.json())
                 .then(j => this.technicians = j);
+              
+              // Cargar repuestos disponibles
+              fetch('/OrdenServicio/GetRepuestos')
+                .then(r => r.json())
+                .then(j => this.repuestos = j)
+                .catch(err => {
+                  console.error('Error cargando repuestos:', err);
+                  this.repuestos = [];
+                });
             },
 
             openAdd() {
@@ -353,20 +872,184 @@
               this.addClientDevices = [];
               this.addUser = { id:null };
               this.addDisp = { id:null };
+              this.repuestosAgregados = [];
+              this.selectedRepuesto = '';
+              this.cantidadRepuesto = 1;
+              this.precioServicio = 0;
+              this.toggleHeaderVisibility(true);
             },
-            closeAdd() { this.showAdd = false; },
+            
+            agregarRepuesto() {
+              if (!this.selectedRepuesto || !this.cantidadRepuesto) return;
+              
+              const repuesto = this.repuestos.find(r => r.id == this.selectedRepuesto);
+              if (!repuesto) return;
+              
+              // Verificar stock disponible
+              if (this.cantidadRepuesto > repuesto.stock) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Stock insuficiente',
+                  text: `Disponible: ${repuesto.stock}`
+                });
+                return;
+              }
+              
+              // Verificar si ya está agregado
+              const existente = this.repuestosAgregados.find(r => r.id == this.selectedRepuesto);
+              if (existente) {
+                // Verificar que la cantidad total no exceda el stock
+                if (existente.cantidad + parseInt(this.cantidadRepuesto) > repuesto.stock) {
+                  Swal.fire({
+                    icon: 'warning',
+                    title: 'Stock insuficiente',
+                    text: `Ya tienes ${existente.cantidad}, disponible: ${repuesto.stock}`
+                  });
+                  return;
+                }
+                existente.cantidad += parseInt(this.cantidadRepuesto);
+              } else {
+                this.repuestosAgregados.push({
+                  id: repuesto.id,
+                  nombre: repuesto.nombre,
+                  precio: repuesto.precio,
+                  cantidad: parseInt(this.cantidadRepuesto)
+                });
+              }
+              
+              // Resetear selección
+              this.selectedRepuesto = '';
+              this.cantidadRepuesto = 1;
+            },
+            
+            quitarRepuesto(index) {
+              this.repuestosAgregados.splice(index, 1);
+            },
+            closeAdd() { 
+              this.showAdd = false; 
+              this.toggleHeaderVisibility(false);
+            },
+
+            agregarRepuestoEdit() {
+              if (!this.editSelectedRepuesto || !this.editCantidadRepuesto) return;
+              
+              const repuesto = this.repuestos.find(r => r.id == this.editSelectedRepuesto);
+              if (!repuesto) return;
+              
+              // Verificar stock disponible
+              if (this.editCantidadRepuesto > repuesto.stock) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Stock insuficiente',
+                  text: `Disponible: ${repuesto.stock}`
+                });
+                return;
+              }
+              
+              // Verificar si ya está agregado
+              const existente = this.selected.repuestos.find(r => r.id == this.editSelectedRepuesto);
+              if (existente) {
+                // Verificar que la cantidad total no exceda el stock
+                if (existente.cantidad + parseInt(this.editCantidadRepuesto) > repuesto.stock) {
+                  Swal.fire({
+                    icon: 'warning',
+                    title: 'Stock insuficiente',
+                    text: `Ya tienes ${existente.cantidad}, disponible: ${repuesto.stock}`
+                  });
+                  return;
+                }
+                existente.cantidad += parseInt(this.editCantidadRepuesto);
+              } else {
+                this.selected.repuestos.push({
+                  id: repuesto.id,
+                  nombre: repuesto.nombre,
+                  precio: repuesto.precio,
+                  cantidad: parseInt(this.editCantidadRepuesto)
+                });
+              }
+              
+              // Resetear selección
+              this.editSelectedRepuesto = '';
+              this.editCantidadRepuesto = 1;
+            },
+            
+            eliminarRepuestoEdit(index) {
+              const repuesto = this.selected.repuestos[index];
+              
+              // Si el repuesto tiene idDetalle, significa que ya está en la base de datos
+              if (repuesto.idDetalle) {
+                Swal.fire({
+                  title: '¿Eliminar repuesto?',
+                  text: `¿Está seguro de eliminar el repuesto "${repuesto.nombre}"?`,
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonColor: '#d33',
+                  cancelButtonColor: '#3085d6',
+                  confirmButtonText: 'Sí, eliminar',
+                  cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    fetch('/OrdenServicio/QuitarRepuesto', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                      },
+                      body: JSON.stringify({
+                        idDetalle: repuesto.idDetalle
+                      })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data.success) {
+                        this.selected.repuestos.splice(index, 1);
+                      } else {
+                        Swal.fire({
+                          icon: 'error',
+                          title: 'Error',
+                          text: 'Error al eliminar el repuesto: ' + data.message
+                        });
+                      }
+                    })
+                    .catch(error => {
+                      console.error('Error:', error);
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al eliminar el repuesto'
+                      });
+                    });
+                  }
+                });
+              } else {
+                // Si no tiene idDetalle, es un repuesto agregado localmente que aún no se ha guardado
+                this.selected.repuestos.splice(index, 1);
+              }
+            },
 
             openEdit(o) {
               this.selected = {
                 id: o.id,
-                descripcion: o.descripcion,
-                estado: this.orderStates.includes(o.estado) ? o.estado : this.orderStates[0]
+                descripcionFalla: o.descripcion,
+                estado: this.orderStates.includes(o.estado) ? o.estado : this.orderStates[0],
+                cliente: o.clienteText,
+                dispositivo: o.dispositivoText,
+                fecha: o.fecha,
+                idCliente: o.clienteId,
+                idDispositivo: o.dispositivoId,
+                idUsuario: o.usuarioId,
+                precioServicio: o.precioServicio || 0,
+                repuestos: []
               };
               this.editClient = { id:o.clienteId, text:o.clienteText };
               this.editUser   = { id:o.usuarioId };
               this.editDisp   = { id:o.dispositivoId };
               this.editClientTerm = o.clienteText;
               this.editClientResults = [];
+              this.editSelectedRepuesto = '';
+              this.editCantidadRepuesto = 1;
+              
+              // Cargar dispositivos del cliente
               fetch(`/Dispositivo/ByClient?clientId=${o.clienteId}`)
                 .then(r => r.json())
                 .then(j => {
@@ -379,15 +1062,50 @@
                     this.editDisp = { id: j[0].id };
                   }
                 });
+              
+              // Cargar repuestos de la orden
+              console.log(`Cargando repuestos para orden ${o.id}`);
+              fetch(`/OrdenServicio/GetDetallesRepuesto/${o.id}`)
+                .then(r => {
+                  console.log('Respuesta del servidor:', r.status, r.statusText);
+                  if (!r.ok) {
+                    throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+                  }
+                  return r.json();
+                })
+                .then(j => {
+                  console.log('Datos de repuestos recibidos:', j);
+                  this.selected.repuestos = (j || []).map(detalle => ({
+                    idDetalle: detalle.idDetalle,
+                    id: detalle.idRepuesto,
+                    nombre: detalle.nombreRepuesto,
+                    cantidad: detalle.cantidad,
+                    precio: detalle.precioUnitario
+                  }));
+                  console.log('Repuestos procesados:', this.selected.repuestos);
+                })
+                .catch(err => {
+                  console.error('Error cargando repuestos de la orden:', err);
+                  this.selected.repuestos = [];
+                });
+              
               this.showEdit = true;
+              this.toggleHeaderVisibility(true);
             },
-            closeEdit() { this.showEdit = false; },
+            closeEdit() { 
+              this.showEdit = false; 
+              this.toggleHeaderVisibility(false);
+            },
 
             openDelete(o) {
               this.selected = { id:o.id };
               this.showDelete = true;
+              this.toggleHeaderVisibility(true);
             },
-            closeDelete() { this.showDelete = false; },
+            closeDelete() { 
+              this.showDelete = false; 
+              this.toggleHeaderVisibility(false);
+            },
 
             searchClient(mode) {
               const term = this[mode + 'ClientTerm'];
@@ -421,29 +1139,266 @@
               const f = this.$refs.addForm;
               // Validar que se haya seleccionado un dispositivo
               if (!this.addDisp.id) {
-                alert('Por favor selecciona un dispositivo');
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Campo requerido',
+                  text: 'Por favor selecciona un dispositivo'
+                });
                 return;
               }
+              
               // Asegura que el hidden input tenga el valor
               const hiddenInput = f.querySelector('input[name="IdDispositivo"]');
               hiddenInput.value = this.addDisp.id;
-              f.submit();
+              
+              // Si hay repuestos agregados, enviarlos por AJAX
+              if (this.repuestosAgregados.length > 0) {
+                const formData = new FormData(f);
+                
+                // Crear la orden primero
+                fetch('/OrdenServicio/Create', {
+                  method: 'POST',
+                  headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                  },
+                  body: formData
+                })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                  const contentType = response.headers.get('content-type');
+                  if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('La respuesta no es JSON válido');
+                  }
+                  return response.json();
+                })
+                .then(data => {
+                  if (data.success) {
+                    // Agregar repuestos uno por uno
+                    const promises = this.repuestosAgregados.map(repuesto => {
+                      return fetch('/OrdenServicio/AgregarRepuesto', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({
+                          idOrden: data.ordenId,
+                          idRepuesto: repuesto.id,
+                          cantidad: repuesto.cantidad
+                        })
+                      });
+                    });
+                    
+                    Promise.all(promises)
+                      .then(() => {
+                        window.location.reload();
+                      })
+                      .catch(error => {
+                        console.error('Error agregando repuestos:', error);
+                        Swal.fire({
+                          icon: 'error',
+                          title: 'Error',
+                          text: 'Error al agregar repuestos'
+                        });
+                      });
+                  } else {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Error',
+                      text: 'Error al crear la orden'
+                    });
+                  }
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al crear la orden'
+                  });
+                });
+              } else {
+                // Sin repuestos, envío normal
+                f.submit();
+              }
             },
             submitEdit() {
               const f = this.$refs.editForm;
-              // Validar que se haya seleccionado un dispositivo
-              if (!this.editDisp.id) {
-                alert('Por favor selecciona un dispositivo');
+              
+              // Validar campos requeridos
+              if (!this.selected.idUsuario) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Campo requerido',
+                  text: 'Por favor selecciona un técnico'
+                });
                 return;
               }
-              const hiddenInput = f.querySelector('input[name="IdDispositivo"]');
-              hiddenInput.value = this.editDisp.id;
-              f.submit();
+              if (!this.selected.estado) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Campo requerido',
+                  text: 'Por favor selecciona un estado'
+                });
+                return;
+              }
+              
+              // Obtener repuestos nuevos (sin idDetalle)
+              const repuestosNuevos = this.selected.repuestos.filter(r => !r.idDetalle);
+              
+              // Si hay repuestos nuevos, manejar con AJAX
+              if (repuestosNuevos.length > 0) {
+                const formData = new FormData(f);
+                
+                // Actualizar la orden primero
+                fetch(f.action, {
+                  method: 'POST',
+                  headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                  },
+                  body: formData
+                })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                  const contentType = response.headers.get('content-type');
+                  if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                  } else {
+                    // Si no es JSON, la actualización fue exitosa
+                    return { success: true };
+                  }
+                })
+                .then(data => {
+                  if (data.success !== false) {
+                    // Agregar repuestos nuevos uno por uno
+                    const promises = repuestosNuevos.map(repuesto => {
+                      return fetch('/OrdenServicio/AgregarRepuesto', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({
+                          idOrden: this.selected.id,
+                          idRepuesto: repuesto.id,
+                          cantidad: repuesto.cantidad
+                        })
+                      });
+                    });
+                    
+                    Promise.all(promises)
+                      .then(() => {
+                        window.location.reload();
+                      })
+                      .catch(error => {
+                        console.error('Error agregando repuestos:', error);
+                        Swal.fire({
+                          icon: 'error',
+                          title: 'Error',
+                          text: 'Error al agregar repuestos'
+                        });
+                      });
+                  } else {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Error',
+                      text: 'Error al actualizar la orden'
+                    });
+                  }
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al actualizar la orden'
+                  });
+                });
+              } else {
+                // Sin repuestos nuevos, envío normal
+                f.submit();
+              }
             },
             submitDelete() {
               const f = event.target;
               f.action = `/OrdenServicio/Delete/${this.selected.id}`;
               f.submit();
+            },
+            
+            finalizarOrden(ordenId) {
+              Swal.fire({
+                title: '¿Finalizar orden?',
+                text: '¿Está seguro de finalizar esta orden? Se enviará la factura por email al cliente.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, finalizar',
+                cancelButtonText: 'Cancelar'
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  fetch('/OrdenServicio/CompletarOrden', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                  },
+                  body: JSON.stringify({
+                    idOrden: ordenId,
+                    enviarFactura: true
+                  })
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Orden finalizada',
+                      text: data.message,
+                      showConfirmButton: false,
+                      timer: 2000
+                    }).then(() => {
+                      window.location.reload();
+                    });
+                  } else {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Error',
+                      text: data.message
+                    });
+                  }
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al finalizar la orden'
+                  });
+                });
+                }
+              });
+            },
+            toggleHeaderVisibility(hide) {
+              const header = document.querySelector('.main-header');
+              const body = document.body;
+              if (hide) {
+                header.style.display = 'none';
+                header.style.visibility = 'hidden';
+                header.style.opacity = '0';
+                body.classList.add('modal-active');
+                body.style.overflow = 'hidden';
+              } else {
+                header.style.display = '';
+                header.style.visibility = '';
+                header.style.opacity = '';
+                body.classList.remove('modal-active');
+                body.style.overflow = '';
+              }
             }
           }
         }

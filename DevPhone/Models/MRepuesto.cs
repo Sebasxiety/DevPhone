@@ -18,7 +18,10 @@ namespace DevPhone.Models
         [Required, Column(TypeName = "decimal(18,2)")]
         public decimal PrecioUnitario { get; set; }
 
-        // Navegación
+        [Required]
+        public int Stock { get; set; }
+
+        // Navegaciï¿½n
         [ValidateNever]
         public virtual ICollection<MDetalleRepuesto> DetallesRepuesto { get; set; } = new List<MDetalleRepuesto>();
     }

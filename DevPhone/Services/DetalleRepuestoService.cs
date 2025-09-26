@@ -1,4 +1,4 @@
-﻿using DevPhone.Models;
+using DevPhone.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevPhone.Services
@@ -23,6 +23,13 @@ namespace DevPhone.Services
                 .Include(dr => dr.OrdenService)
                 .Include(dr => dr.Repuesto)
                 .FirstOrDefaultAsync(dr => dr.IdDetalle == id);
+
+        public Task<List<MDetalleRepuesto>> GetByOrdenIdAsync(int idOrden) =>
+            _context.DetallesRepuesto
+                .Include(dr => dr.OrdenService)
+                .Include(dr => dr.Repuesto)
+                .Where(dr => dr.IdOrden == idOrden)
+                .ToListAsync();
 
         public async Task CreateAsync(MDetalleRepuesto detalle)
         {
