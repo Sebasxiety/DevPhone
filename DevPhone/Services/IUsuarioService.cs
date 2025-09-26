@@ -17,5 +17,6 @@ namespace DevPhone.Services
         Task<MUsuario> GetUserByRefreshTokenAsync(string refreshToken);
         Task UpdateUserAsync(MUsuario usuario);
         Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
+        Task<bool> UpdateProfileAsync(int userId, string fullName);
     }
 }

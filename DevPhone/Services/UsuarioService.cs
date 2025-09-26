@@ -72,5 +72,19 @@ namespace DevPhone.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<bool> UpdateProfileAsync(int userId, string fullName)
+        {
+            var user = await _context.Usuarios.FirstOrDefaultAsync(u => u.IdUsuario == userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.Nombres = fullName;
+            _context.Usuarios.Update(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

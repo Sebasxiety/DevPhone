@@ -287,6 +287,86 @@ namespace DevPhone.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+
+                    return Json(new UpdateProfileResponseDto
+                    {
+                        Success = false,
+                        Message = "Datos inválidos",
+                    });
+                }
+
+                // Obtener el ID del usuario autenticado
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Json(new UpdateProfileResponseDto
+                    {
+                        Success = false,
+                        Message = "Usuario no autenticado"
+                    });
+                }
+
+                // Actualizar el perfil
+                var result = await _usuarioService.UpdateProfileAsync(userId, model.FullName);
+
+                if (result)
+                {
+                    // Obtener el usuario actualizado para regenerar el token
+                    var updatedUser = await _usuarioService.GetUserByIdAsync(userId);
+                    if (updatedUser != null)
+                    {
+                        // Generar nuevo token JWT con la información actualizada
+                        var newToken = _jwtService.GenerateToken(updatedUser);
+                        var newRefreshToken = _jwtService.GenerateRefreshToken();
+
+                        // Actualizar refresh token en la base de datos
+                        updatedUser.RefreshToken = newRefreshToken;
+                        updatedUser.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+                        await _usuarioService.UpdateUserAsync(updatedUser);
+
+                        // Configurar nuevas cookies con el token actualizado
+                        SetAuthCookies(newToken, newRefreshToken);
+                    }
+
+                    return Json(new UpdateProfileResponseDto
+                    {
+                        Success = true,
+                        Message = "Perfil actualizado exitosamente",
+                        UpdatedFullName = model.FullName
+                    });
+                }
+                else
+                {
+                    return Json(new UpdateProfileResponseDto
+                    {
+                        Success = false,
+                        Message = "No se pudo actualizar el perfil"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar perfil para usuario {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                return Json(new UpdateProfileResponseDto
+                {
+                    Success = false,
+                    Message = "Error interno del servidor"
+                });
+            }
+        }
+
         #region Métodos auxiliares
 
         private void SetAuthCookies(string token, string refreshToken)
