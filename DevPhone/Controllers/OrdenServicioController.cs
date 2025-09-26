@@ -1,5 +1,6 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using DevPhone.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DevPhone.Controllers
 {
-    [Authorize]
+    [AdminOrTechnicianAuthorize]
     public class OrdenServicioController : Controller
     {
         private readonly IOrdenServicioService _svc;
@@ -58,11 +59,11 @@ namespace DevPhone.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Verificar que el técnico existe
+            // Verificar que el tï¿½cnico existe
             var tecnicoExists = await _us.ExistsAsync(orden.IdUsuario);
             if (!tecnicoExists)
             {
-                TempData["OrdenError"] = "El técnico seleccionado no existe";
+                TempData["OrdenError"] = "El tï¿½cnico seleccionado no existe";
                 return RedirectToAction(nameof(Index));
             }
 

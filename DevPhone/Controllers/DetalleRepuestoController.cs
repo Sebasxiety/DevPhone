@@ -1,11 +1,13 @@
-﻿using DevPhone.Models;
+using DevPhone.Models;
 using DevPhone.Services;
+using DevPhone.Attributes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DevPhone.Controllers
 {
+    [AdminOrTechnicianAuthorize]
     public class DetalleRepuestoController : Controller
     {
         private readonly IDetalleRepuestoService _detalleService;

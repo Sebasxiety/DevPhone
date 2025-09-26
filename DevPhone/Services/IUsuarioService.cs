@@ -11,5 +11,11 @@ namespace DevPhone.Services
         Task UpdateAsync(MUsuario usuario);
         Task DeleteAsync(int id);
         Task<bool> ExistsAsync(int id);
+
+        // Métodos adicionales para JWT
+        Task<MUsuario> GetUserByIdAsync(int id);
+        Task<MUsuario> GetUserByRefreshTokenAsync(string refreshToken);
+        Task UpdateUserAsync(MUsuario usuario);
+        Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
     }
 }

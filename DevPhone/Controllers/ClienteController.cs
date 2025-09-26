@@ -1,11 +1,12 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using DevPhone.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevPhone.Controllers
 {
-    [Authorize]
+    [AdminOrTechnicianAuthorize]
     public class ClienteController : Controller
     {
         private readonly IClienteService _svc;
@@ -25,7 +26,7 @@ namespace DevPhone.Controllers
         public async Task<IActionResult> Create(
             [Bind("Nombre,Apellido,Cedula,Telefono,Correo,Direccion")] MCliente cliente)
         {
-            // Seteamos la fecha aquí
+            // Seteamos la fecha aquï¿½
             cliente.FechaCreacion = DateTime.Now;
 
             if (!ModelState.IsValid)
@@ -50,7 +51,7 @@ namespace DevPhone.Controllers
         {
             if (id != cliente.IdCliente)
             {
-                TempData["ClienteError"] = "Identificador inválido.";
+                TempData["ClienteError"] = "Identificador invï¿½lido.";
                 return RedirectToAction(nameof(Index));
             }
 

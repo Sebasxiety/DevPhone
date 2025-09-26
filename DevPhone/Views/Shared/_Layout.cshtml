@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" x-data="{ sidebarOpen: true }">
 <head>
     <meta charset="utf-8" />
@@ -17,7 +17,10 @@
     <script defer
             src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
    
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <!-- Token CSRF para peticiones AJAX -->
+    @Html.AntiForgeryToken()
     <style>
         .sidebar {
             background: #f8f9fa;
@@ -120,8 +123,36 @@
     <footer class="bg-light text-center py-3 mt-auto">
         &copy; @DateTime.Now.Year - DevPhone
     </footer>
+    <!-- jQuery -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Bootstrap -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    
+    <!-- Configuración global del token CSRF -->
+     <script>
+         $(document).ready(function() {
+             var token = $('input[name="__RequestVerificationToken"]').val();
+             if (token) {
+                 // Configurar el token para jQuery AJAX
+                 $.ajaxSetup({
+                     beforeSend: function(xhr) {
+                         xhr.setRequestHeader('RequestVerificationToken', token);
+                     }
+                 });
+                 
+                 // También disponible como variable global
+                 window.csrfToken = token;
+             }
+         });
+     </script>
+     
+     <!-- Sistema de autenticación -->
+     <script src="~/js/auth.js" asp-append-version="true"></script>
+     
+     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

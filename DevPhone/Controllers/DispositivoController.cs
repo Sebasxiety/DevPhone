@@ -1,12 +1,13 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using DevPhone.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DevPhone.Controllers
 {
-    [Authorize]
+    [AdminOrTechnicianAuthorize]
     public class DispositivoController : Controller
     {
         private readonly IDispositivoService _dispositivoService;
@@ -29,7 +30,7 @@ namespace DevPhone.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MDispositivo disp)
         {
-            // omitimos navegación si existe
+            // omitimos navegaciï¿½n si existe
             ModelState.Remove(nameof(MDispositivo.Ordenes));
             ModelState.Remove(nameof(MDispositivo.Cliente));
 

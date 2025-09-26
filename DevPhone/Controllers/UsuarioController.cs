@@ -1,11 +1,12 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using DevPhone.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevPhone.Controllers
 {
-    [Authorize]
+    [AdminAuthorize]
     public class UsuarioController : Controller
     {
         private readonly IUsuarioService _svc;

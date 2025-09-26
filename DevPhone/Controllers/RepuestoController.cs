@@ -1,11 +1,12 @@
 using DevPhone.Models;
 using DevPhone.Services;
+using DevPhone.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevPhone.Controllers
 {
-    [Authorize]
+    [AdminOrTechnicianAuthorize]
     public class RepuestoController : Controller
     {
         private readonly IRepuestoService _svc;
@@ -24,7 +25,7 @@ namespace DevPhone.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MRepuesto repuesto)
         {
-            // Ignorar la navegación al bindear
+            // Ignorar la navegaciï¿½n al bindear
             ModelState.Remove(nameof(MRepuesto.DetallesRepuesto));
 
             if (!ModelState.IsValid)

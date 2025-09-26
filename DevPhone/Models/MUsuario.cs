@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using DevPhone.Models.Enums;
 
 namespace DevPhone.Models
 {
@@ -23,7 +25,19 @@ namespace DevPhone.Models
         [Required]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-        // Navegación
+        // Propiedades adicionales para JWT
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
+
+        // Propiedad helper para trabajar con el enum
+        [NotMapped]
+        public UserRole RoleEnum
+        {
+            get => UserRoleExtensions.FromString(Rol);
+            set => Rol = value.ToDisplayString();
+        }
+
+        // Navegaciï¿½n
         [ValidateNever]
         public virtual ICollection<MOrdenServicio> Ordenes { get; set; } = new List<MOrdenServicio>();
     }

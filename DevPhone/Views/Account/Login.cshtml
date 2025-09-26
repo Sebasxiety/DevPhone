@@ -1,4 +1,4 @@
-﻿@model DevPhone.ViewModels.LoginVM
+@model DevPhone.ViewModels.LoginVM
 @{
     ViewData["Title"] = "Iniciar sesión";
 }
@@ -9,10 +9,11 @@
     <div class="card p-4"
          style="width: 320px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
         <h4 class="mb-4 text-center">@ViewData["Title"]</h4>
-        <form asp-action="Login" method="post">
+        <form asp-action="Login" method="post" id="loginForm">
+            @Html.AntiForgeryToken()
             <div class="mb-3">
                 <label asp-for="Username" class="form-label"></label>
-                <input asp-for="Username" class="form-control" placeholder="Usuario" />
+                <input asp-for="Username" class="form-control" placeholder="Usuario" autocomplete="username" />
                 <span asp-validation-for="Username" class="text-danger"></span>
             </div>
 
@@ -22,7 +23,8 @@
                     <input asp-for="Password"
                            :type="showPassword ? 'text' : 'password'"
                            class="form-control"
-                           placeholder="Contraseña" />
+                           placeholder="Contraseña"
+                           autocomplete="current-password" />
                     <button type="button"
                             class="btn btn-outline-secondary"
                             x-on:click="showPassword = !showPassword"
@@ -34,11 +36,126 @@
             </div>
 
             <button type="submit"
-                    class="btn btn-primary w-100 py-2">
+                    class="btn btn-primary w-100 py-2"
+                    id="loginButton">
+                <span class="spinner-border spinner-border-sm me-2 d-none" id="loginSpinner"></span>
                 <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
             </button>
 
             <div asp-validation-summary="All" class="text-danger mt-2"></div>
+            <div id="loginError" class="text-danger mt-2 d-none"></div>
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const $form = $('#loginForm');
+            const $button = $('#loginButton');
+            const $spinner = $('#loginSpinner');
+            const $errorDiv = $('#loginError');
+
+            // Mejorar el manejo del formulario de login
+            $form.on('submit', function(e) {
+                e.preventDefault();
+                
+                // Limpiar errores previos
+                $errorDiv.addClass('d-none').text('');
+                $('.text-danger').not($errorDiv).text('');
+                
+                // Mostrar indicador de carga
+                $button.prop('disabled', true);
+                $spinner.removeClass('d-none');
+                
+                const username = $('#Username').val().trim();
+                const password = $('#Password').val();
+                
+                // Validación básica
+                if (!username) {
+                    showError('Por favor, ingresa tu nombre de usuario');
+                    resetButton();
+                    $('#Username').focus();
+                    return;
+                }
+                
+                if (!password) {
+                    showError('Por favor, ingresa tu contraseña');
+                    resetButton();
+                    $('#Password').focus();
+                    return;
+                }
+
+                // Realizar login con AJAX
+                performLogin(username, password);
+            });
+
+            async function performLogin(username, password) {
+                try {
+                    const response = await $.ajax({
+                        url: '/Account/Login',
+                        method: 'POST',
+                        data: {
+                            Username: username,
+                            Password: password,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.success) {
+                        // Login exitoso
+                        Swal.fire({
+                            title: '¡Bienvenido!',
+                            text: 'Iniciando sesión...',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            // Redirigir
+                            const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
+                            window.location.href = returnUrl || '/Home/Index';
+                        });
+                    } else {
+                        showError(response.message || 'Credenciales inválidas');
+                        resetButton();
+                    }
+                } catch (xhr) {
+                    let errorMessage = 'Error de conexión. Inténtalo de nuevo.';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.status === 400) {
+                        errorMessage = 'Datos inválidos. Verifica tu información.';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'Error del servidor. Inténtalo más tarde.';
+                    }
+                    
+                    showError(errorMessage);
+                    resetButton();
+                }
+            }
+
+            function showError(message) {
+                $errorDiv.text(message).removeClass('d-none');
+            }
+
+            function resetButton() {
+                $button.prop('disabled', false);
+                $spinner.addClass('d-none');
+            }
+
+            // Permitir envío con Enter
+            $('#Username, #Password').on('keypress', function(e) {
+                if (e.which === 13) {
+                    $form.submit();
+                }
+            });
+
+            // Enfocar el primer campo al cargar
+            $('#Username').focus();
+        });
+    </script>
+}

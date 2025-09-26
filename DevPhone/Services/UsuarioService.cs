@@ -45,5 +45,32 @@ namespace DevPhone.Services
         {
             return await _context.Usuarios.AnyAsync(d => d.IdUsuario == id);
         }
+
+        // Métodos adicionales para JWT
+        public Task<MUsuario> GetUserByIdAsync(int id) =>
+            _context.Usuarios.FirstOrDefaultAsync(u => u.IdUsuario == id);
+
+        public Task<MUsuario> GetUserByRefreshTokenAsync(string refreshToken) =>
+            _context.Usuarios.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+
+        public async Task UpdateUserAsync(MUsuario usuario)
+        {
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            var user = await _context.Usuarios.FirstOrDefaultAsync(u => u.IdUsuario == userId);
+            if (user == null || user.Contrasena != currentPassword)
+            {
+                return false;
+            }
+
+            user.Contrasena = newPassword;
+            _context.Usuarios.Update(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

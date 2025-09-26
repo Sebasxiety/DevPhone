@@ -1,0 +1,21 @@
+@{
+    // Vista parcial para incluir el token CSRF en las páginas
+}
+<meta name="csrf-token" content="@Html.AntiForgeryToken().ToString().Split('"')[5]" />
+<script>
+    // Configurar el token CSRF para peticiones AJAX
+    $(document).ready(function() {
+        var token = $('meta[name="csrf-token"]').attr('content');
+        if (token) {
+            // Configurar el token para jQuery AJAX
+            $.ajaxSetup({
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-CSRF-TOKEN', token);
+                }
+            });
+            
+            // También disponible como variable global
+            window.csrfToken = token;
+        }
+    });
+</script>

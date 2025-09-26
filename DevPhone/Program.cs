@@ -1,9 +1,14 @@
 using DevPhone.Models;
+using DevPhone.Models.Configuration;
 using DevPhone.Services;
+using DevPhone.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,38 +16,110 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2) Servicios de dominio
+// 2) ConfiguraciÃ³n JWT
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
+
+// 3) Servicios de dominio
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IDispositivoService, DispositivoService>();
 builder.Services.AddScoped<IOrdenServicioService, OrdenServicioService>();
 builder.Services.AddScoped<IRepuestoService, RepuestoService>();
 builder.Services.AddScoped<IDetalleRepuestoService, DetalleRepuestoService>();
 
-// 3) Servicio de usuarios contra tu tabla Usuarios
+// 4) Servicio de usuarios y JWT
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
-// 4) Autenticación por cookies
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
-        options.AccessDeniedPath = "/Account/AccessDenied";
-        options.Cookie.Name = "DevPhoneAuth";
-    });
-
-// 5) MVC con filtro global que exige usuario autenticado
-builder.Services.AddControllersWithViews(options =>
+// 5) AutenticaciÃ³n hÃ­brida (Cookies + JWT)
+builder.Services.AddAuthentication(options =>
 {
-    var policy = new AuthorizationPolicyBuilder()
-                     .RequireAuthenticatedUser()
-                     .Build();
-    options.Filters.Add(new AuthorizeFilter(policy));
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = jwtSettings?.ValidateIssuerSigningKey ?? true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings?.SecretKey ?? "")),
+        ValidateIssuer = jwtSettings?.ValidateIssuer ?? true,
+        ValidIssuer = jwtSettings?.Issuer,
+        ValidateAudience = jwtSettings?.ValidateAudience ?? true,
+        ValidAudience = jwtSettings?.Audience,
+        ValidateLifetime = jwtSettings?.ValidateLifetime ?? true,
+        ClockSkew = TimeSpan.FromMinutes(jwtSettings?.ClockSkewInMinutes ?? 5)
+    };
+
+    // Configurar eventos para manejar cookies
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // Intentar obtener token de cookie si no estÃ¡ en header
+            if (string.IsNullOrEmpty(context.Token))
+            {
+                context.Token = context.Request.Cookies["DevPhoneJWT"];
+            }
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                context.Response.Headers.Add("Token-Expired", "true");
+            }
+            return Task.CompletedTask;
+        }
+    };
+})
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.Cookie.Name = "DevPhoneAuth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
+
+// 6) Configurar protecciÃ³n CSRF
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "__RequestVerificationToken";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
+
+// 7) MVC sin filtro global de autenticaciÃ³n (se maneja por atributos en controladores)
+builder.Services.AddControllersWithViews();
+
+// 8) Configurar CORS para desarrollo
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevPhonePolicy", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// 9) Configurar opciones de cookies globales
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.CheckConsentNeeded = context => false; // No requerir consentimiento para cookies esenciales
+    options.MinimumSameSitePolicy = SameSiteMode.Strict;
+    options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
+    options.Secure = CookieSecurePolicy.SameAsRequest;
 });
 
 var app = builder.Build();
 
-// 6) Seed inicial de usuario Admin en la tabla Usuarios
+// 10) Seed inicial de usuario Admin en la tabla Usuarios
 await SeedAdminUser(app);
 
 if (!app.Environment.IsDevelopment())
@@ -54,13 +131,19 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// 11) Habilitar polÃ­tica de cookies
+app.UseCookiePolicy();
+
 app.UseRouting();
 
-// 7) Habilitar autenticación y autorización
+// 12) Habilitar CORS
+app.UseCors("DevPhonePolicy");
+
+// 13) Habilitar autenticaciÃ³n y autorizaciÃ³n
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 8) Ruta por defecto al login
+// 15) Ruta por defecto al login
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");
@@ -72,14 +155,14 @@ static async Task SeedAdminUser(WebApplication app)
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    // Si la tabla Usuarios está vacía, creamos el Admin
+    // Si la tabla Usuarios estï¿½ vacï¿½a, creamos el Admin
     if (!await context.Usuarios.AnyAsync())
     {
         var admin = new MUsuario
         {
             Nombres = "Administrador",
             NombreUsuario = "admin",
-            Contrasena = "Admin123!",  // ajusta contraseña
+            Contrasena = "Admin123!",  // ajusta contraseï¿½a
             Rol = "Admin",
             FechaCreacion = DateTime.Now
         };
